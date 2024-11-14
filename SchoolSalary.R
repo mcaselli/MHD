@@ -67,9 +67,6 @@ merged <- merge(inc, sal, by = "Municipality")
 merged$Average.Salary <- as.numeric(merged$Average.Salary)
 merged$DOR.Income.Per.Capita <- as.numeric(merged$DOR.Income.Per.Capita)
 
-#make a column in merge for Fill where if Municipality is Marblehead, fill is red otherwise it is skyblue
-merged <- merged %>%
-  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D"))
 
 
 #plot DOR.Income by Average.Salary using ggplot
@@ -116,6 +113,7 @@ mhd_income_peers %>%
 
 #make a bar graph of the average salary of Marblehead and its income peers
 plot3<- mhd_income_peers %>%
+  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
   ggplot(aes(y = reorder(Municipality, Average.Salary), x = Average.Salary, fill = FillCol)) +
   geom_col() +
   theme_minimal() +
@@ -135,6 +133,7 @@ plot3<- mhd_income_peers %>%
 
 #make a bar graph of the average salary of Marblehead and its income peers
 plot4<- mhd_income_peers %>%
+  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
   ggplot(aes(y = reorder(Municipality, DOR.Income.Per.Capita), x = DOR.Income.Per.Capita, fill = FillCol)) +
   geom_col() +
   theme_minimal() +
@@ -227,12 +226,9 @@ mhd_tax_peers <- taxinc_sal %>%
                  mhd_tax_percentiles$tax_percentile + 0.05))
 
 
-
-mhd_tax_peers <- mhd_tax_peers %>%
-  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D"))
-
 #make a bar graph of the average salary of Marblehead and its income peers
 plot7<- mhd_tax_peers %>%
+  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
   ggplot(aes(y = reorder(Municipality, Average.Salary), x = Average.Salary, fill = FillCol)) +
   geom_col() +
   theme_minimal() +
@@ -252,6 +248,7 @@ plot7<- mhd_tax_peers %>%
 
 #make a bar graph of the average salary of Marblehead and its income peers
 plot8<- mhd_tax_peers %>%
+  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
   ggplot(aes(y = reorder(Municipality, per_capita_receipts), x = per_capita_receipts, fill = FillCol)) +
   geom_col() +
   theme_minimal() +
