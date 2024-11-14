@@ -67,11 +67,16 @@ The state data covers `r n_municipalities` municipalities.
 ```{r}
 mhd_percentiles <- dat %>%
   filter(Municipality == "Marblehead") %>%
-  select(contains("percentile"))
+  select(contains("percentile"), contains("rank"))
 mhd_percentiles
 ```
 
+Marblehead ranks
+`r max(dat$pci_rank) - mhd_percentiles$pci_rank + 1` 
+in income per capita of the `r n_municipalities` municipalities in the state, higher than `r label_percent(accuracy=0.1)(mhd_percentiles$pci_percentile)` of them.
 
+In terms of tax receipts per capita, Marblehead ranks
+`r max(dat$pc_receipts_rank) - mhd_percentiles$pc_receipts_rank + 1` of Massachusetts municipalities.
 
 ```{r}
 pctile_half_width <- 0.05
