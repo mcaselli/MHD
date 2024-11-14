@@ -1,0 +1,98 @@
+---
+title: "MHD Finances"
+format: 
+  html:
+    embed-resources: true
+---
+
+```{r}
+here::i_am("MHDRevenue.qmd")
+library(here)
+library(tidyverse)
+library(readxl)
+library(scales)
+```
+
+```{r}
+# Load the data
+revenue <- read_xlsx(here("data", "RevBySource.xlsx"),
+                     range=cell_limits(c(2,1), c(NA,7)), # row 2 to N, cols A to G
+                     col_names = TRUE,
+                     .name_repair = "universal")
+
+rev <- read_xlsx(here("data", "RevBySource.xlsx"),
+                 skip=1,
+                 .name_repair = "universal")
+
+pci <- read_xlsx(here("data", "DOR_Income_EQV_Per_Capita.xlsx"),
+                 .name_repair = "universal")
+```
+
+```{r}
+rev %>%
+  filter(Fiscal.Year == 2023,
+         Municipality == "Marblehead")
+```
+
+```{r}
+pci %>%
+  filter(Municipality == "Marblehead")
+```
+
+```{r}
+dat <- rev %>%
+  filter(Fiscal.Year == 2023) %>%
+  left_join(pci, by=c("DOR.Code", "Municipality")) %>%
+  mutate(pci_percentile=rank(DOR.Income.Per.Capita)/n(),
+         per_capita_receipts = Total.Receipts...9/Population,
+         pc_receipts_percentile = rank(per_capita_receipts)/n(),
+         pc_levy_percentile = rank(Tax.Levy)/n())
+```
+
+
+```{r}
+mhd_percentiles <- dat %>%
+  filter(Municipality == "Marblehead") %>%
+  select(contains("percentile"))
+mhd_percentiles
+```
+
+```{r}
+mhd_peers <-
+  dat %>%
+  filter(between(pci_percentile,
+                 mhd_percentiles$pci_percentile - 0.05,
+                 mhd_percentiles$pci_percentile + 0.05))
+```
+
+
+```{r}
+dat %>%
+  mutate(per_capita_receipts = Total.Receipts...9/Population) %>%
+  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=Municipality)) +
+  geom_point() +
+  gghighlight::gghighlight(Municipality == "Marblehead") +
+  scale_x_continuous(labels=label_dollar()) +
+  scale_y_continuous(labels=label_dollar())
+```
+
+```{r}
+mhd_peers %>%
+  mutate(per_capita_receipts = Total.Receipts...9/Population) %>%
+  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=Municipality)) +
+  geom_point() +
+  gghighlight::gghighlight(Municipality == "Marblehead") +
+  scale_x_continuous(labels=label_dollar()) +
+  scale_y_continuous(labels=label_dollar())
+```
+
+
+# Sources
+Revenue by source: https://dlsgateway.dor.state.ma.us/reports/rdPage.aspx?rdReport=RevenueBySource.RBS.RevbySourceMAIN
+
+Income, EQV per capita : https://dlsgateway.dor.state.ma.us/reports/rdPage.aspx?rdReport=DOR_Income_EQV_Per_Capita
+
+# Definitions
+Equalized Valuations (EQV)
+Equalized Valuation is the determination of an estimate of the full and fair cash value (FFCV) of all property in the Commonwealth as of a certain taxable date.
+https://www.mass.gov/info-details/equalized-valuations-eqv#:~:text=Equalized%20Valuation%20is%20the%20determination,county%20assessments%20and%20other%20costs.
