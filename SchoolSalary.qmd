@@ -23,7 +23,9 @@ library(scales)
 # municipalities in the teacher salary data that are not in the DOR data
 ```{r}
 #find the sal that are not in inc
-sal[!(sal$Municipality %in% inc$Municipality),]
+sal[!(sal$Municipality %in% inc$Municipality),] %>%
+  arrange(desc(FTE.Count)) %>%
+  DT::datatable(filter="top", rownames = FALSE)
 ```
 
 # Educators by age group
