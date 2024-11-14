@@ -1,0 +1,37 @@
+
+```{r}
+#read data
+rev <- read_xlsx(here("data", "RevBySource.xlsx"),
+                 skip=1,
+                 .name_repair = "universal")
+inc<- read_xlsx(here("data", "DOR_Income_EQV_Per_Capita.xlsx"), .name_repair = "universal")
+sal<- read.csv(here("data", "TeacherSalaries.csv"))
+age<- read.csv(here("data", "EducatorsbyAgeGroupsReport.csv"))
+
+#rename sal column District.Name to Municipality
+sal <- sal %>% rename(Municipality = District.Name)
+
+
+#make a new column in age that calculates the sum of all the columns that start with X
+age <- age %>% mutate(TotalEducators = rowSums(select(age, starts_with("X"))))
+
+#make a new column for each column that starts with X that takes the value in that column and divides it by Total Educators
+age <- age %>% mutate(across(starts_with("X"), ~ . / FTE.Count))
+
+#mutate the colunn called Over.64.yrs.... to divide it by TotalEducators
+age <- age %>% mutate(Over.64.yrs.... = Over.64.yrs.... / FTE.Count)
+
+#rename the column called X.26.yrs..... to <26
+age <- age %>% rename('<26' = X.26.yrs.....)
+
+#rename the column called Over.64.yrs.... to Older
+age <- age %>% rename('64 or more' = Over.64.yrs....)
+
+#rename the columns starting with X so they are just the first two digit number that appears in the name
+age <- age %>% rename_with(~str_extract(., "\\d{2}"), starts_with("X"))
+
+#turn the data into longform making a row for columns <26, 26, 33, 41, 49, 57, Older
+age_long <- age %>%
+  pivot_longer(cols = c(`<26`, `26`, `33`, `41`, `49`, `57`, `64 or more`), names_to = "AgeGroup", values_to = "Percent")
+```
+

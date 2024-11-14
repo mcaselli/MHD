@@ -1,0 +1,38 @@
+---
+title: "School Salary"
+format: 
+  html:
+    embed-resources: true
+---
+
+```{r}
+here::i_am("SchoolSalary.qmd")
+library(here)
+library(readxl)
+library(tidyverse)
+library(ggrepel)
+library(gghighlight)
+library(ggpubr)
+library(scales)
+```
+
+
+{{< include read_and_process_data.qmd >}}
+
+```{r}
+#plot age_long AgeGroup vs Count using ggplot
+plot1 <- ggplot(age_long, aes(x = AgeGroup, y = Percent)) +
+  geom_point(alpha = .01) +
+  theme_minimal() +
+  guides(fill="none")+
+  #geom_point(data = age_long %>% filter(District.Name == "Marblehead"), aes(x = AgeGroup, y = Percent, color = ""#F8766D""))+
+  geom_label(data = age_long %>% filter(District.Name == "Marblehead"), aes(label = round(Percent, digits = 2), x = AgeGroup, y = Percent), color = "#F8766D")+
+  labs(x = "Age Group",
+       y = "Proportion of Educators")+
+    theme(legend.position="none")
+
+ggsave(here("figures", "age.png"), plot1, width = 4, height = 2, units = "in")
+
+plot1
+```
+
