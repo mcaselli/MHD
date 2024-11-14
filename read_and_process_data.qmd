@@ -1,0 +1,38 @@
+---
+title: "MHD schools data import and analysis"
+format: 
+  html:
+    embed-resources: true
+---
+
+
+```{r}
+here::i_am("read_and_process_data.qmd")
+library(here)
+library(tidyverse)
+library(DT)
+```
+
+```{r}
+source(here("read_and_process_data.R"))
+```
+
+
+# municipalities in the teacher salary data that are not in the DOR data
+```{r}
+#find the sal that are not in inc
+sal[!(sal$Municipality %in% inc$Municipality),] %>%
+  arrange(desc(FTE.Count)) %>%
+  datatable(filter="top", rownames = FALSE)
+```
+
+
+# Municipalities dropped from the DOR data for missing teacher salary data
+```{r}
+rev_inc %>%
+  filter(Municipality %in% setdiff(rev_inc$Municipality, rev_inc_sal$Municipality)) %>%
+  datatable(filter="top", rownames=FALSE)
+```
+
+NOTE we can get some of these back by assigning the municipality to their 
+appropriate regional school district e.g. Hamilton and Wehnam to Hamilton-Wenham
