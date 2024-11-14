@@ -15,11 +15,6 @@ library(scales)
 
 ```{r}
 # Load the data
-revenue <- read_xlsx(here("data", "RevBySource.xlsx"),
-                     range=cell_limits(c(2,1), c(NA,7)), # row 2 to N, cols A to G
-                     col_names = TRUE,
-                     .name_repair = "universal")
-
 rev_raw <- read_xlsx(here("data", "RevBySource.xlsx"),
                  skip=1,
                  .name_repair = "universal") %>%
@@ -89,6 +84,17 @@ dat <-
          ns_peer = pci_peer & County=="ESSEX")
 ```
 
+
+```{r}
+dat %>%
+  filter(pci_peer, pci_percentile > mhd_percentiles$pci_percentile)
+
+
+dat %>%
+  filter(pci_peer, pci_percentile < mhd_percentiles$pci_percentile)
+```
+
+
 ```{r}
 dat %>%
   filter(ns_peer) %>%
@@ -125,7 +131,9 @@ peer_median_pc_receipts <- dat %>%
   pull(median_pc_receipts)
 ```
 
-Marblehead's per capita tax receipts are `r label_dollar()(mhd_pc_receipts)`, 
+By comparing to a peer group of the 10% of Massachusetts municipalities with,
+income per capita closest to Marblehead's, we find that
+Marblehead's per capita tax receipts of  `r label_dollar()(mhd_pc_receipts)`, are
 `r label_percent()((peer_median_pc_receipts - mhd_pc_receipts)/peer_median_pc_receipts)` 
 lower than the median of `r label_dollar()(peer_median_pc_receipts)` of its 
 closest per capita income peers.
@@ -144,14 +152,19 @@ dat %>%
   ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=label,
              color=class)) +
   geom_point() +
-  ggrepel::geom_label_repel() +
-  geom_hline(yintercept=peer_median_pc_receipts, linetype="dashed") +
-  annotate(geom="label", x=140e3, y=peer_median_pc_receipts, label="Median of Peer Group") +
+  ggrepel::geom_text_repel() +
+  geom_hline(yintercept=peer_median_pc_receipts, linetype="dashed",
+             color="darkgray") +
+  annotate(geom="text", x=140e3, y=peer_median_pc_receipts+150, label="Median of Peers",
+           color="darkgray"
+           ) +
   scale_x_continuous(labels=label_dollar()) +
   scale_y_continuous(labels=label_dollar()) +
   labs(title="Marblehead's Per Capita Income Peers",
+       subtitle = "the 34 Mass municipalities (17 above, 17 below) closest to Marblehead in income per capita",
          x="Income per Capita",
-         y="Per Capita Tax Receipts")
+         y="Per Capita Tax Receipts") +
+  theme_minimal()
 ```
 
 ```{r}
