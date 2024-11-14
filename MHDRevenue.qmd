@@ -12,9 +12,22 @@ library(tidyverse)
 library(readxl)
 library(scales)
 ```
+```{r, include=FALSE}
+# turn off output for all chunks in read_and_process_data.qmd
+knitr::opts_chunk$set(
+  include= FALSE, output=FALSE
+)
+```
 
 
 {{< include read_and_process_data.qmd >}}
+
+```{r}
+# back to normal
+knitr::opts_chunk$set(
+  include= TRUE, output=TRUE
+)
+```
 
 
 ```{r}
@@ -23,15 +36,10 @@ n_municipalities <- length(levels(rev_inc$Municipality))
 
 The state data on taxes and incomes covers `r n_municipalities` municipalities.
 
-
-
-
 ```{r}
-mhd_percentiles <- rev_inc %>%
-  filter(Municipality == "Marblehead") %>%
-  select(contains("percentile"), contains("rank"))
 mhd_percentiles
 ```
+
 
 Marblehead ranks
 `r max(rev_inc$pci_rank) - mhd_percentiles$pci_rank + 1` 
@@ -39,39 +47,6 @@ in income per capita of the `r n_municipalities` municipalities in the state, hi
 
 In terms of tax receipts per capita, Marblehead ranks
 `r max(rev_inc$pc_receipts_rank) - mhd_percentiles$pc_receipts_rank + 1` of Massachusetts municipalities.
-
-```{r}
-pctile_half_width <- 0.05
-
-rev_inc <-
-  rev_inc %>%
-  mutate(pci_peer = between(pci_percentile,
-                 mhd_percentiles$pci_percentile - pctile_half_width,
-                 mhd_percentiles$pci_percentile + pctile_half_width),
-         ns_peer = pci_peer & County=="ESSEX")
-```
-
-
-```{r}
-rev_inc %>%
-  filter(pci_peer, pci_percentile > mhd_percentiles$pci_percentile)
-
-rev_inc %>%
-  filter(pci_peer, pci_percentile < mhd_percentiles$pci_percentile)
-```
-
-
-```{r}
-rev_inc %>%
-  filter(ns_peer) %>%
-  select(Municipality, 
-         DOR.Income.Per.Capita,
-         per_capita_receipts,
-         pc_levy,
-         contains("rank"), contains("percentile")) %>%
-  DT::datatable(filter="top", rownames=FALSE)
-```
-
 
 
 ```{r}
@@ -97,9 +72,14 @@ peer_median_pc_receipts <- rev_inc %>%
   pull(median_pc_receipts)
 ```
 
-By comparing to a peer group of the 10% of Massachusetts municipalities with,
+
+
+# Marblehead and its per capita income peers
+
+
+By comparing to a peer group of the 10% of Massachusetts municipalities with
 income per capita closest to Marblehead's, we find that
-Marblehead's per capita tax receipts of  `r label_dollar()(mhd_pc_receipts)`, are
+Marblehead's per capita tax receipts of  `r label_dollar()(mhd_pc_receipts)` is
 `r label_percent()((peer_median_pc_receipts - mhd_pc_receipts)/peer_median_pc_receipts)` 
 lower than the median of `r label_dollar()(peer_median_pc_receipts)` of its 
 closest per capita income peers.
@@ -133,6 +113,22 @@ rev_inc %>%
   theme_minimal()
 ```
 
+
+```{r}
+rev_inc %>%
+  filter(pci_peer) %>%
+  select(Municipality, 
+         ns_peer,
+         DOR.Income.Per.Capita,
+         per_capita_receipts,
+         pc_levy,
+         contains("rank"), contains("percentile")) %>%
+  rename(`Essex County` = ns_peer) %>%
+  DT::datatable(filter="top", rownames=FALSE)
+```
+
+
+
 ```{r}
 rev_inc %>%
   filter(pci_peer) %>%
@@ -142,13 +138,6 @@ rev_inc %>%
             mean_receipts = mean(per_capita_receipts),
             median_receipts = median(per_capita_receipts))
 ```
-
-```{r}
-rev_inc %>%
-  filter(Municipality=="Marblehead") %>%
-  select(DOR.Income.Per.Capita, per_capita_receipts)
-```
-
 
 
 ```{r}
@@ -175,9 +164,5 @@ rev_inc %>%
 # Sources
 Revenue by source: https://dlsgateway.dor.state.ma.us/reports/rdPage.aspx?rdReport=RevenueBySource.RBS.RevbySourceMAIN
 
-Income, EQV per capita : https://dlsgateway.dor.state.ma.us/reports/rdPage.aspx?rdReport=DOR_Income_EQV_Per_Capita
+Income per capita : https://dlsgateway.dor.state.ma.us/reports/rdPage.aspx?rdReport=DOR_Income_EQV_Per_Capita
 
-# Definitions
-Equalized Valuations (EQV)
-Equalized Valuation is the determination of an estimate of the full and fair cash value (FFCV) of all property in the Commonwealth as of a certain taxable date.
-https://www.mass.gov/info-details/equalized-valuations-eqv#:~:text=Equalized%20Valuation%20is%20the%20determination,county%20assessments%20and%20other%20costs.

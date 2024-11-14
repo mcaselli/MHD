@@ -11,6 +11,8 @@ inc <- read_xlsx(here("data", "DOR_Income_EQV_Per_Capita.xlsx"),
   mutate(across(DOR.Code:Cherry.Sheet.FY, as.factor))
 ```
 
+
+
 ```{r}
 # check that the municipalities in the two datasets are set-equivalent
 setequal(unique(inc$Municipality), unique(rev$Municipality))
@@ -20,7 +22,9 @@ setequal(unique(inc$Municipality), unique(rev$Municipality))
 #check that the length of the two datasets are equal
 nrow(inc) == nrow(rev)
 ```
+
 ```{r}
+# merge revenue and income data, and calculate percentiles
 rev_inc <- rev %>%
   left_join(inc, by=c("DOR.Code", "Municipality")) %>%
   mutate(pci_rank = rank(DOR.Income.Per.Capita),
@@ -34,8 +38,29 @@ rev_inc <- rev %>%
 ```
 
 
+```{r}
+mhd_percentiles <- rev_inc %>%
+  filter(Municipality == "Marblehead") %>%
+  select(contains("percentile"), contains("rank"))
+mhd_percentiles
+```
 
 ```{r}
+pctile_half_width <- 0.05
+
+# flag marblehead peers in the rev_inc data
+rev_inc <-
+  rev_inc %>%
+  mutate(pci_peer = between(pci_percentile,
+                 mhd_percentiles$pci_percentile - pctile_half_width,
+                 mhd_percentiles$pci_percentile + pctile_half_width),
+         ns_peer = pci_peer & County=="ESSEX")
+```
+
+
+
+```{r}
+# teacher salary data
 sal<- read.csv(here("data", "TeacherSalaries.csv")) %>%
   #rename sal column District.Name to Municipality
   rename(Municipality = District.Name) %>%
@@ -64,8 +89,8 @@ age_long <- age %>%
 
 
 ```{r}
-#merge income and salaries
-merged <- merge(inc, sal, by = "Municipality") %>%
+# merge income and teacher salary data, and calculate percentiles
+inc_sal <- merge(inc, sal, by = "Municipality") %>%
   mutate(across(c(DOR.Income.Per.Capita, Average.Salary), as.numeric),
          income_percentile=rank(DOR.Income.Per.Capita)/n(), 
          salary_percentile=rank(Average.Salary)/n())
@@ -73,20 +98,23 @@ merged <- merge(inc, sal, by = "Municipality") %>%
 ```
 
 ```{r}
-mhd_percentiles <- merged %>% 
+mhd_inc_sal_percentiles <- inc_sal %>% 
   filter(Municipality == "Marblehead") %>% 
   select(contains("percentile"))
 
-mhd_income_peers <- merged %>%
+mhd_income_peers <- inc_sal %>%
   filter(between(income_percentile,
-                 mhd_percentiles$income_percentile - 0.05,
-                 mhd_percentiles$income_percentile + 0.05))
+                 mhd_inc_sal_percentiles$income_percentile - 0.05,
+                 mhd_inc_sal_percentiles$income_percentile + 0.05))
 ```
 
+
 ```{r}
-#merge tax and income data
-rev_inc <- rev %>%
+# 3-way merge of revenue, income, and teacher salary
+rev_inc_sal <- rev %>%
   left_join(inc, by=c("DOR.Code", "Municipality")) %>%
+  left_join(sal, by="Municipality") %>%
+  filter(!is.na(Average.Salary)) %>%
   mutate(pci_rank = rank(DOR.Income.Per.Capita),
          pci_percentile=pci_rank/n(),
          per_capita_receipts = Total.Receipts...9/Population,
@@ -94,30 +122,23 @@ rev_inc <- rev %>%
          pc_receipts_percentile = pc_receipts_rank/n(),
          pc_levy = Tax.Levy/Population,
          pc_levy_rank = rank(pc_levy),
-         pc_levy_percentile = pc_levy_rank/n())
+         pc_levy_percentile = pc_levy_rank/n(),
+         salary_rank = rank(Average.Salary),
+         salary_percentile=salary_rank/n())
 ```
 
 
 ```{r}
- #merge rev_inc with sal
-rev_inc_sal <- rev_inc %>%
-  left_join(sal, by=c("Municipality")) %>%
-  filter(!is.na(Average.Salary)) %>%
-  mutate(tax_percentile=rank(per_capita_receipts)/n(), 
-         salary_percentile=rank(Average.Salary)/n())
-```
-
-```{r}
-mhd_tax_percentiles <- rev_inc_sal %>%
+mhd_3_way_percentiles <- rev_inc_sal %>%
   filter(Municipality == "Marblehead") %>%
-  select(tax_percentile, salary_percentile)
+  select(contains("percentile"), contains("rank"))
 ```
 
 ```{r}
 mhd_tax_peers <- rev_inc_sal %>%
   filter(!is.na(Average.Salary)) %>%
-  filter(between(tax_percentile,
-                 mhd_tax_percentiles$tax_percentile - 0.05,
-                 mhd_tax_percentiles$tax_percentile + 0.05))
+  filter(between(pc_receipts_percentile,
+                 mhd_3_way_percentiles$pc_receipts_percentile - 0.05,
+                 mhd_3_way_percentiles$pc_receipts_percentile + 0.05))
 ```
 

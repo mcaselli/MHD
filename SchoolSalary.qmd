@@ -15,10 +15,22 @@ library(gghighlight)
 library(ggpubr)
 library(scales)
 ```
+```{r, include=FALSE}
+# turn off output for all chunks in read_and_process_data.qmd
+knitr::opts_chunk$set(
+  include= FALSE, output=FALSE
+)
+```
 
 
 {{< include read_and_process_data.qmd >}}
 
+```{r}
+# back to normal
+knitr::opts_chunk$set(
+  include= TRUE, output=TRUE
+)
+```
 
 # municipalities in the teacher salary data that are not in the DOR data
 ```{r}
@@ -27,6 +39,18 @@ sal[!(sal$Municipality %in% inc$Municipality),] %>%
   arrange(desc(FTE.Count)) %>%
   DT::datatable(filter="top", rownames = FALSE)
 ```
+
+
+# Municipalities dropped from the DOR data for missing teacher salary data
+```{r}
+rev_inc %>%
+  filter(Municipality %in% setdiff(rev_inc$Municipality, rev_inc_sal$Municipality)) %>%
+  DT::datatable(filter="top", rownames=FALSE)
+```
+
+NOTE we can get some of these back by assigning the municipality to their 
+appropriate regional school district e.g. Hamilton and Wehnam to Hamilton-Wenham
+
 
 # Educators by age group
 ```{r}
@@ -50,15 +74,15 @@ plot1
 # Average teacher salary vs per capita income
 ```{r}
 #plot DOR.Income by Average.Salary using ggplot
-plot2 <- ggplot(merged, aes(x = DOR.Income.Per.Capita, y = Average.Salary)) +
+plot2 <- ggplot(inc_sal, aes(x = DOR.Income.Per.Capita, y = Average.Salary)) +
   geom_point(alpha = .5) +
   geom_smooth(method = "loess", se = FALSE, color = "#7CAE00") +
   theme_minimal()+
-  geom_text_repel(data = merged %>% filter( !(Municipality == "Marblehead")), aes(label = Municipality), max.overlaps = 20, size = 3, segment.color = 'grey80') +
-  geom_label_repel(data = merged %>% filter(Municipality == "Marblehead"), aes(label = Municipality), color = "#F8766D", position = position_nudge_repel(x =100, y =15))+
-  geom_label_repel(data = merged %>% filter(Municipality == "Gloucester" |Municipality == "Beverly"), aes(label = Municipality), color = "#3B9AB2") +
-  geom_point(data = merged %>% filter(Municipality == "Marblehead"), color = "#F8766D", size = 3) +
-  geom_point(data = merged %>% filter(Municipality == "Gloucester" |Municipality == "Beverly"), color = "#00BFC4", size = 2) +
+  geom_text_repel(data = inc_sal %>% filter( !(Municipality == "Marblehead")), aes(label = Municipality), max.overlaps = 20, size = 3, segment.color = 'grey80') +
+  geom_label_repel(data = inc_sal %>% filter(Municipality == "Marblehead"), aes(label = Municipality), color = "#F8766D", position = position_nudge_repel(x =100, y =15))+
+  geom_label_repel(data = inc_sal %>% filter(Municipality == "Gloucester" |Municipality == "Beverly"), aes(label = Municipality), color = "#3B9AB2") +
+  geom_point(data = inc_sal %>% filter(Municipality == "Marblehead"), color = "#F8766D", size = 3) +
+  geom_point(data = inc_sal %>% filter(Municipality == "Gloucester" |Municipality == "Beverly"), color = "#00BFC4", size = 2) +
   scale_x_continuous(labels = scales::label_dollar()) +
   scale_y_continuous(labels = scales::label_dollar())+
   labs(x = "Per Capita Income",
