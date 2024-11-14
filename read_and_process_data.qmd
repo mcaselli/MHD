@@ -34,4 +34,58 @@ age <- age %>% rename_with(~str_extract(., "\\d{2}"), starts_with("X"))
 age_long <- age %>%
   pivot_longer(cols = c(`<26`, `26`, `33`, `41`, `49`, `57`, `64 or more`), names_to = "AgeGroup", values_to = "Percent")
 ```
+```{r}
+#merge income and salaries
+merged <- merge(inc, sal, by = "Municipality") %>%
+  mutate(across(c(DOR.Income.Per.Capita, Average.Salary), as.numeric),
+         income_percentile=rank(DOR.Income.Per.Capita)/n(), 
+         salary_percentile=rank(Average.Salary)/n())
+
+```
+
+```{r}
+mhd_percentiles <- merged %>% 
+  filter(Municipality == "Marblehead") %>% 
+  select(contains("percentile"))
+
+mhd_income_peers <- merged %>%
+  filter(between(income_percentile,
+                 mhd_percentiles$income_percentile - 0.05,
+                 mhd_percentiles$income_percentile + 0.05))
+```
+
+```{r}
+ #merge tax and income data
+ taxinc <- rev %>%
+   filter(Fiscal.Year == 2023) %>%
+   left_join(inc, by=c("Municipality")) %>%
+   mutate(pci_percentile=rank(DOR.Income.Per.Capita)/n(),
+          per_capita_receipts = Total.Receipts...9/Population,
+          pc_receipts_percentile = rank(per_capita_receipts)/n(),
+          pc_levy_percentile = rank(Tax.Levy)/n())
+```
+
+
+```{r}
+ #merge taxinc with sal
+taxinc_sal <- taxinc %>%
+  left_join(sal, by=c("Municipality")) %>%
+  filter(!is.na(Average.Salary)) %>%
+  mutate(tax_percentile=rank(per_capita_receipts)/n(), 
+         salary_percentile=rank(Average.Salary)/n())
+```
+
+```{r}
+mhd_tax_percentiles <- taxinc_sal %>%
+  filter(Municipality == "Marblehead") %>%
+  select(tax_percentile, salary_percentile)
+```
+
+```{r}
+mhd_tax_peers <- taxinc_sal %>%
+  filter(!is.na(Average.Salary)) %>%
+  filter(between(tax_percentile,
+                 mhd_tax_percentiles$tax_percentile - 0.05,
+                 mhd_tax_percentiles$tax_percentile + 0.05))
+```
 
