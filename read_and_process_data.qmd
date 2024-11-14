@@ -3,9 +3,39 @@
 #read data
 rev <- read_xlsx(here("data", "RevBySource.xlsx"),
                  skip=1,
-                 .name_repair = "universal")
-inc<- read_xlsx(here("data", "DOR_Income_EQV_Per_Capita.xlsx"), .name_repair = "universal")
+                 .name_repair = "universal") %>%
+  mutate(across(DOR.Code:Fiscal.Year, as.factor))
 
+inc <- read_xlsx(here("data", "DOR_Income_EQV_Per_Capita.xlsx"), 
+                .name_repair = "universal") %>% 
+  mutate(across(DOR.Code:Cherry.Sheet.FY, as.factor))
+```
+
+```{r}
+# check that the municipalities in the two datasets are set-equivalent
+setequal(unique(inc$Municipality), unique(rev$Municipality))
+```
+
+```{r}
+#check that the length of the two datasets are equal
+nrow(inc) == nrow(rev)
+```
+```{r}
+rev_inc <- rev %>%
+  left_join(inc, by=c("DOR.Code", "Municipality")) %>%
+  mutate(pci_rank = rank(DOR.Income.Per.Capita),
+         pci_percentile=pci_rank/n(),
+         per_capita_receipts = Total.Receipts...9/Population,
+         pc_receipts_rank = rank(per_capita_receipts),
+         pc_receipts_percentile = pc_receipts_rank/n(),
+         pc_levy = Tax.Levy/Population,
+         pc_levy_rank = rank(pc_levy),
+         pc_levy_percentile = pc_levy_rank/n())
+```
+
+
+
+```{r}
 sal<- read.csv(here("data", "TeacherSalaries.csv")) %>%
   #rename sal column District.Name to Municipality
   rename(Municipality = District.Name) %>%
@@ -54,20 +84,23 @@ mhd_income_peers <- merged %>%
 ```
 
 ```{r}
- #merge tax and income data
- taxinc <- rev %>%
-   filter(Fiscal.Year == 2023) %>%
-   left_join(inc, by=c("Municipality")) %>%
-   mutate(pci_percentile=rank(DOR.Income.Per.Capita)/n(),
-          per_capita_receipts = Total.Receipts...9/Population,
-          pc_receipts_percentile = rank(per_capita_receipts)/n(),
-          pc_levy_percentile = rank(Tax.Levy)/n())
+#merge tax and income data
+rev_inc <- rev %>%
+  left_join(inc, by=c("DOR.Code", "Municipality")) %>%
+  mutate(pci_rank = rank(DOR.Income.Per.Capita),
+         pci_percentile=pci_rank/n(),
+         per_capita_receipts = Total.Receipts...9/Population,
+         pc_receipts_rank = rank(per_capita_receipts),
+         pc_receipts_percentile = pc_receipts_rank/n(),
+         pc_levy = Tax.Levy/Population,
+         pc_levy_rank = rank(pc_levy),
+         pc_levy_percentile = pc_levy_rank/n())
 ```
 
 
 ```{r}
- #merge taxinc with sal
-taxinc_sal <- taxinc %>%
+ #merge rev_inc with sal
+rev_inc_sal <- rev_inc %>%
   left_join(sal, by=c("Municipality")) %>%
   filter(!is.na(Average.Salary)) %>%
   mutate(tax_percentile=rank(per_capita_receipts)/n(), 
@@ -75,13 +108,13 @@ taxinc_sal <- taxinc %>%
 ```
 
 ```{r}
-mhd_tax_percentiles <- taxinc_sal %>%
+mhd_tax_percentiles <- rev_inc_sal %>%
   filter(Municipality == "Marblehead") %>%
   select(tax_percentile, salary_percentile)
 ```
 
 ```{r}
-mhd_tax_peers <- taxinc_sal %>%
+mhd_tax_peers <- rev_inc_sal %>%
   filter(!is.na(Average.Salary)) %>%
   filter(between(tax_percentile,
                  mhd_tax_percentiles$tax_percentile - 0.05,

@@ -133,12 +133,12 @@ comp
 ```
 # All Mass municipalities, tax receipts vs per capita income
 ```{r}
-plot5 <- taxinc %>%
+plot5 <- rev_inc %>%
    mutate(per_capita_receipts = Total.Receipts...9/Population) %>%
    ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=Municipality)) +
    geom_point(colour = "darkgrey", alpha = .5) +
-   geom_label_repel(data = taxinc %>% filter(Municipality == "Marblehead"), aes(label = Municipality), color = "#F8766D", position = position_nudge_repel(x =100, y =15))+
-   geom_point(data = taxinc %>% filter(Municipality == "Marblehead"), color = "#F8766D", size = 3) +
+   geom_label_repel(data = rev_inc %>% filter(Municipality == "Marblehead"), aes(label = Municipality), color = "#F8766D", position = position_nudge_repel(x =100, y =15))+
+   geom_point(data = rev_inc %>% filter(Municipality == "Marblehead"), color = "#F8766D", size = 3) +
    scale_x_continuous(labels=label_dollar()) +
    scale_y_continuous(labels=label_dollar())+ 
    theme_minimal()+
@@ -155,13 +155,13 @@ plot5 <- taxinc %>%
 
 # Average teacher salary vs per-capita tax receipts
 ```{r}
-plot6<-  taxinc_sal %>% 
+plot6<-  rev_inc_sal %>% 
   filter(per_capita_receipts < 12000) %>%
    ggplot(aes(x=per_capita_receipts, y=Average.Salary, label=Municipality)) +
    geom_point(colour = "darkgrey", alpha = .5) +
-  #geom_text_repel(data = taxinc_sal %>% filter( !(Municipality == "Marblehead")), aes(label = Municipality), max.overlaps = 5, size = 3, segment.color = 'grey80') +
-  geom_label_repel(data = taxinc_sal %>% filter(Municipality == "Marblehead"), aes(label = Municipality), color = "#F8766D")+
-   geom_point(data = taxinc_sal %>% filter(Municipality == "Marblehead"), color = "#F8766D", size = 3) +
+  #geom_text_repel(data = rev_inc_sal %>% filter( !(Municipality == "Marblehead")), aes(label = Municipality), max.overlaps = 5, size = 3, segment.color = 'grey80') +
+  geom_label_repel(data = rev_inc_sal %>% filter(Municipality == "Marblehead"), aes(label = Municipality), color = "#F8766D")+
+   geom_point(data = rev_inc_sal %>% filter(Municipality == "Marblehead"), color = "#F8766D", size = 3) +
    scale_x_continuous(labels=label_dollar(), limits = c(0, 15000)) +
    scale_y_continuous(labels=label_dollar())+ 
    theme_minimal()+

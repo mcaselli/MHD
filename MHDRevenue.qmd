@@ -13,71 +13,38 @@ library(readxl)
 library(scales)
 ```
 
-```{r}
-# Load the data
-rev_raw <- read_xlsx(here("data", "RevBySource.xlsx"),
-                 skip=1,
-                 .name_repair = "universal") %>%
-  mutate(across(DOR.Code:Fiscal.Year, as.factor))
 
-pci_raw <- read_xlsx(here("data", "DOR_Income_EQV_Per_Capita.xlsx"),
-                 .name_repair = "universal") %>%
-  mutate(across(DOR.Code:Cherry.Sheet.FY, as.factor))
+{{< include read_and_process_data.qmd >}}
+
+
+```{r}
+n_municipalities <- length(levels(rev_inc$Municipality))
 ```
 
-```{r}
-# check that the municipalities in the two datasets are set-equivalent
-setequal(unique(pci_raw$Municipality), unique(rev_raw$Municipality))
-```
-
-```{r}
-#check that the length of the two datasets are equal
-nrow(pci_raw) == nrow(rev_raw)
-```
-
-
-
-```{r}
-dat <- rev_raw %>%
-  left_join(pci_raw, by=c("DOR.Code", "Municipality")) %>%
-  mutate(pci_rank = rank(DOR.Income.Per.Capita),
-         pci_percentile=pci_rank/n(),
-         per_capita_receipts = Total.Receipts...9/Population,
-         pc_receipts_rank = rank(per_capita_receipts),
-         pc_receipts_percentile = pc_receipts_rank/n(),
-         pc_levy = Tax.Levy/Population,
-         pc_levy_rank = rank(pc_levy),
-         pc_levy_percentile = pc_levy_rank/n())
-```
-
-```{r}
-n_municipalities <- length(levels(dat$Municipality))
-```
-
-The state data covers `r n_municipalities` municipalities.
+The state data on taxes and incomes covers `r n_municipalities` municipalities.
 
 
 
 
 ```{r}
-mhd_percentiles <- dat %>%
+mhd_percentiles <- rev_inc %>%
   filter(Municipality == "Marblehead") %>%
   select(contains("percentile"), contains("rank"))
 mhd_percentiles
 ```
 
 Marblehead ranks
-`r max(dat$pci_rank) - mhd_percentiles$pci_rank + 1` 
+`r max(rev_inc$pci_rank) - mhd_percentiles$pci_rank + 1` 
 in income per capita of the `r n_municipalities` municipalities in the state, higher than `r label_percent(accuracy=0.1)(mhd_percentiles$pci_percentile)` of them.
 
 In terms of tax receipts per capita, Marblehead ranks
-`r max(dat$pc_receipts_rank) - mhd_percentiles$pc_receipts_rank + 1` of Massachusetts municipalities.
+`r max(rev_inc$pc_receipts_rank) - mhd_percentiles$pc_receipts_rank + 1` of Massachusetts municipalities.
 
 ```{r}
 pctile_half_width <- 0.05
 
-dat <-
-  dat %>%
+rev_inc <-
+  rev_inc %>%
   mutate(pci_peer = between(pci_percentile,
                  mhd_percentiles$pci_percentile - pctile_half_width,
                  mhd_percentiles$pci_percentile + pctile_half_width),
@@ -86,17 +53,16 @@ dat <-
 
 
 ```{r}
-dat %>%
+rev_inc %>%
   filter(pci_peer, pci_percentile > mhd_percentiles$pci_percentile)
 
-
-dat %>%
+rev_inc %>%
   filter(pci_peer, pci_percentile < mhd_percentiles$pci_percentile)
 ```
 
 
 ```{r}
-dat %>%
+rev_inc %>%
   filter(ns_peer) %>%
   select(Municipality, 
          DOR.Income.Per.Capita,
@@ -109,7 +75,7 @@ dat %>%
 
 
 ```{r}
-dat %>%
+rev_inc %>%
   ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=Municipality)) +
   geom_point() +
   gghighlight::gghighlight(Municipality == "Marblehead") +
@@ -121,11 +87,11 @@ dat %>%
 ```
 
 ```{r}
-mhd_pc_receipts <- dat %>%
+mhd_pc_receipts <- rev_inc %>%
   filter(Municipality=="Marblehead") %>%
   pull(per_capita_receipts)
 
-peer_median_pc_receipts <- dat %>%
+peer_median_pc_receipts <- rev_inc %>%
   filter(pci_peer) %>%
   summarize(median_pc_receipts = median(per_capita_receipts)) %>%
   pull(median_pc_receipts)
@@ -140,7 +106,7 @@ closest per capita income peers.
 
 
 ```{r}
-dat %>%
+rev_inc %>%
   filter(pci_peer) %>%
   mutate(class = case_when(
     Municipality=="Marblehead" ~ "Marblehead",
@@ -168,7 +134,7 @@ dat %>%
 ```
 
 ```{r}
-dat %>%
+rev_inc %>%
   filter(pci_peer) %>%
   #calculate mean and median of DOR.Income.Per.Capita and per_capita_receipts
   summarize(mean_income = mean(DOR.Income.Per.Capita),
@@ -178,7 +144,7 @@ dat %>%
 ```
 
 ```{r}
-dat %>%
+rev_inc %>%
   filter(Municipality=="Marblehead") %>%
   select(DOR.Income.Per.Capita, per_capita_receipts)
 ```
@@ -186,7 +152,7 @@ dat %>%
 
 
 ```{r}
-dat %>%
+rev_inc %>%
   filter(County=="ESSEX") %>%
   mutate(class = case_when(
     Municipality=="Marblehead" ~ "Marblehead",
