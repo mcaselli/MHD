@@ -13,20 +13,7 @@ library(readxl)
 library(scales)
 ```
 ```{r, include=FALSE}
-# turn off output for all chunks in read_and_process_data.qmd
-knitr::opts_chunk$set(
-  include= FALSE, output=FALSE
-)
-```
-
-
-{{< include read_and_process_data.qmd >}}
-
-```{r}
-# back to normal
-knitr::opts_chunk$set(
-  include= TRUE, output=TRUE
-)
+source(here("read_and_process_data.R"))
 ```
 
 
@@ -47,6 +34,11 @@ in income per capita of the `r n_municipalities` municipalities in the state, hi
 
 In terms of tax receipts per capita, Marblehead ranks
 `r max(rev_inc$pc_receipts_rank) - mhd_percentiles$pc_receipts_rank + 1` of Massachusetts municipalities.
+
+Less than `r label_percent(accuracy=1)(1-mhd_percentiles$pci_percentile)` 
+of Massachusetts municipalities have per capita income higher than Marblehead, while a full 
+`r label_percent(accuracy=1)(1-mhd_inc_sal_percentiles$salary_percentile)` 
+of school districts in the state have a higher average teacher salary.
 
 
 ```{r}
