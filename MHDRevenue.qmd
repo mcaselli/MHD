@@ -20,34 +20,48 @@ revenue <- read_xlsx(here("data", "RevBySource.xlsx"),
                      col_names = TRUE,
                      .name_repair = "universal")
 
-rev <- read_xlsx(here("data", "RevBySource.xlsx"),
+rev_raw <- read_xlsx(here("data", "RevBySource.xlsx"),
                  skip=1,
-                 .name_repair = "universal")
+                 .name_repair = "universal") %>%
+  mutate(across(DOR.Code:Fiscal.Year, as.factor))
 
-pci <- read_xlsx(here("data", "DOR_Income_EQV_Per_Capita.xlsx"),
-                 .name_repair = "universal")
+pci_raw <- read_xlsx(here("data", "DOR_Income_EQV_Per_Capita.xlsx"),
+                 .name_repair = "universal") %>%
+  mutate(across(DOR.Code:Cherry.Sheet.FY, as.factor))
 ```
 
 ```{r}
-rev %>%
-  filter(Fiscal.Year == 2023,
-         Municipality == "Marblehead")
+# check that the municipalities in the two datasets are set-equivalent
+setequal(unique(pci_raw$Municipality), unique(rev_raw$Municipality))
 ```
 
 ```{r}
-pci %>%
-  filter(Municipality == "Marblehead")
+#check that the length of the two datasets are equal
+nrow(pci_raw) == nrow(rev_raw)
 ```
 
+
+
 ```{r}
-dat <- rev %>%
-  filter(Fiscal.Year == 2023) %>%
-  left_join(pci, by=c("DOR.Code", "Municipality")) %>%
-  mutate(pci_percentile=rank(DOR.Income.Per.Capita)/n(),
+dat <- rev_raw %>%
+  left_join(pci_raw, by=c("DOR.Code", "Municipality")) %>%
+  mutate(pci_rank = rank(DOR.Income.Per.Capita),
+         pci_percentile=pci_rank/n(),
          per_capita_receipts = Total.Receipts...9/Population,
-         pc_receipts_percentile = rank(per_capita_receipts)/n(),
-         pc_levy_percentile = rank(Tax.Levy)/n())
+         pc_receipts_rank = rank(per_capita_receipts),
+         pc_receipts_percentile = pc_receipts_rank/n(),
+         pc_levy = Tax.Levy/Population,
+         pc_levy_rank = rank(pc_levy),
+         pc_levy_percentile = pc_levy_rank/n())
 ```
+
+```{r}
+n_municipalities <- length(levels(dat$Municipality))
+```
+
+The state data covers `r n_municipalities` municipalities.
+
+
 
 
 ```{r}
@@ -57,33 +71,84 @@ mhd_percentiles <- dat %>%
 mhd_percentiles
 ```
 
+
+
 ```{r}
-mhd_peers <-
+pctile_half_width <- 0.05
+
+dat <-
   dat %>%
-  filter(between(pci_percentile,
-                 mhd_percentiles$pci_percentile - 0.05,
-                 mhd_percentiles$pci_percentile + 0.05))
+  mutate(pci_peer = between(pci_percentile,
+                 mhd_percentiles$pci_percentile - pctile_half_width,
+                 mhd_percentiles$pci_percentile + pctile_half_width),
+         ns_peer = pci_peer & County=="ESSEX")
+```
+
+```{r}
+dat %>%
+  filter(ns_peer) %>%
+  select(Municipality, 
+         DOR.Income.Per.Capita,
+         per_capita_receipts,
+         pc_levy,
+         contains("rank"), contains("percentile")) %>%
+  DT::datatable(filter="top", rownames=FALSE)
+```
+
+
+
+```{r}
+dat %>%
+  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=Municipality)) +
+  geom_point() +
+  gghighlight::gghighlight(Municipality == "Marblehead") +
+  scale_x_continuous(labels=label_dollar()) +
+  scale_y_continuous(labels=label_dollar()) +
+  labs(title="All Massachusetts Municipalities",
+         x="Income per Capita",
+         y="Per Capita Tax Receipts")
+```
+
+```{r}
+dat %>%
+  filter(pci_peer) %>%
+  mutate(class = case_when(
+    Municipality=="Marblehead" ~ "Marblehead",
+    ns_peer ~ "North Shore",
+    TRUE ~ "Others"
+  ),
+  label=case_when(class=="Others" ~ NA,
+                  TRUE ~ Municipality)) %>%
+  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=label,
+             color=class)) +
+  geom_point() +
+  ggrepel::geom_label_repel() +
+  scale_x_continuous(labels=label_dollar()) +
+  scale_y_continuous(labels=label_dollar()) +
+  labs(title="Marblehead's Per Capita Income Peers",
+         x="Income per Capita",
+         y="Per Capita Tax Receipts")
 ```
 
 
 ```{r}
 dat %>%
-  mutate(per_capita_receipts = Total.Receipts...9/Population) %>%
-  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=Municipality)) +
+  filter(County=="ESSEX") %>%
+  mutate(class = case_when(
+    Municipality=="Marblehead" ~ "Marblehead",
+    TRUE ~ "Others"
+  ),
+  label=case_when(class=="Others" ~ NA,
+                  TRUE ~ Municipality)) %>%
+  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=label,
+             color=class)) +
   geom_point() +
-  gghighlight::gghighlight(Municipality == "Marblehead") +
+  #ggrepel::geom_label_repel() +
   scale_x_continuous(labels=label_dollar()) +
-  scale_y_continuous(labels=label_dollar())
-```
-
-```{r}
-mhd_peers %>%
-  mutate(per_capita_receipts = Total.Receipts...9/Population) %>%
-  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=Municipality)) +
-  geom_point() +
-  gghighlight::gghighlight(Municipality == "Marblehead") +
-  scale_x_continuous(labels=label_dollar()) +
-  scale_y_continuous(labels=label_dollar())
+  scale_y_continuous(labels=label_dollar()) +
+  labs(title="Essex County Municipalities",
+         x="Income per Capita",
+         y="Per Capita Tax Receipts")
 ```
 
 
