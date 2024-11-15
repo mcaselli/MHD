@@ -222,7 +222,7 @@ plot_rev_income
 # barplots of income and tax receipts
 
 ```{r}
-sizes <- list("geom_text_size" = 2.8, "axis_text_size" = 8, "title_size" = 9)
+sizes <- list("axis_text_size" = 8, "title_size" = 9)
 ```
 
 
@@ -236,7 +236,7 @@ pci_bar_plot <- rev_inc_sal %>%
   geom_col() +
   labs(title = "Per Capita Income",
        x = "DOR Income Per Capita") +
-  geom_text(hjust = -0.1, size = sizes$geom_text_size)+
+  geom_text(hjust = -0.1, size = sizes$axis_text_size/.pt)+
   guides(fill="none")+
   coord_cartesian(xlim = c(0, 260e3)) +
   theme_minimal() +
@@ -261,7 +261,7 @@ receipts_bar_plot <- rev_inc_sal %>%
   geom_col() +
   labs(title = "Per Capita Tax Receipts",
        x = "Per Captia Tax Receipts") +
-  geom_text(hjust = -0.1, size = sizes$geom_text_size)+
+  geom_text(hjust = -0.1, size = sizes$axis_text_size/.pt)+
   guides(fill="none")+
   coord_cartesian(xlim = c(0, 10e3)) +
   theme_minimal() +
@@ -287,7 +287,7 @@ sal_bar_plot <- rev_inc_sal %>%
   labs(title = "Average Teacher Salary",
        y = "",
        x = "Average Teacher Salary") +
-  geom_text(hjust = -0.1, size = sizes$geom_text_size)+
+  geom_text(hjust = -0.1, size = sizes$axis_text_size/.pt)+
   guides(fill="none")+
   coord_cartesian(xlim = c(0, 260e3)) +
   theme_minimal() +
