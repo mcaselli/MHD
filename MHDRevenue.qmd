@@ -35,11 +35,6 @@ in income per capita of the `r n_municipalities` municipalities in the state, hi
 In terms of tax receipts per capita, Marblehead ranks
 `r max(rev_inc$pc_receipts_rank) - mhd_percentiles$pc_receipts_rank + 1` of Massachusetts municipalities.
 
-Less than `r label_percent(accuracy=1)(1-mhd_percentiles$pci_percentile)` 
-of Massachusetts municipalities have per capita income higher than Marblehead, while a full 
-`r label_percent(accuracy=1)(1-mhd_inc_sal_percentiles$salary_percentile)` 
-of school districts in the state have a higher average teacher salary.
-
 
 ```{r}
 receipts_income_plot <- rev_inc %>%
@@ -64,6 +59,9 @@ receipts_income_plot
 
 
 ```
+
+
+
 
 ```{r}
 mhd_pc_receipts <- rev_inc %>%
@@ -94,27 +92,29 @@ rev_inc %>%
   filter(pci_peer) %>%
   mutate(class = case_when(
     Municipality=="Marblehead" ~ "Marblehead",
-    ns_peer ~ "North Shore",
+    ns_peer ~ "Essex County",
     TRUE ~ "Other Mass Municipalities"
   ),
   label=case_when(!ns_peer ~ NA,
                   TRUE ~ Municipality)) %>%
-  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=label,
+  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=Municipality,
              color=class)) +
   geom_point() +
-  ggrepel::geom_text_repel() +
+  ggrepel::geom_text_repel(show.legend = FALSE) +
   geom_hline(yintercept=peer_median_pc_receipts, linetype="dashed",
-             color="darkgray") +
+             color="#333333") +
   annotate(geom="text", x=140e3, y=peer_median_pc_receipts+150, label="Median of Peers",
-           color="darkgray"
+           color="#333333"
            ) +
+  scale_color_manual(values=c("Marblehead"="#F8766D", "Essex County"="#00BFC4", "Other Mass Municipalities"="gray"))+
   scale_x_continuous(labels=label_dollar()) +
   scale_y_continuous(labels=label_dollar()) +
-  labs(title="Marblehead's Per Capita Income Peers",
-       subtitle = "the 34 Mass municipalities (17 above, 17 below) closest to Marblehead in income per capita",
+  labs(title="Tax Receipts among Marblehead's Per Capita Income Peers",
          x="Income per Capita",
          y="Per Capita Tax Receipts") +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        legend.position = "bottom")
 ```
 
 
@@ -141,6 +141,161 @@ rev_inc %>%
             median_income = median(DOR.Income.Per.Capita),
             mean_receipts = mean(per_capita_receipts),
             median_receipts = median(per_capita_receipts))
+```
+
+# among k-12 district peers
+```{r}
+rev_inc_sal %>%
+  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=Municipality)) +
+  geom_point() +
+  geom_smooth(method="loess", se=FALSE) +
+  gghighlight::gghighlight(Municipality == "Marblehead") +
+  scale_x_continuous(labels=label_dollar()) +
+  scale_y_continuous(labels=label_dollar()) +
+  labs(title="Mass municipalities with their own k-12 school districts",
+         x="Income per Capita",
+         y="Per Capita Tax Receipts")
+```
+
+```{r}
+k_12_peer_median_pc_receipts <- rev_inc_sal %>%
+  filter(pci_peer) %>%
+  summarize(median_pc_receipts = median(per_capita_receipts)) %>%
+  pull(median_pc_receipts)
+```
+
+
+
+# Marblehead and its per capita income peers
+
+
+By comparing to a peer group of the 10% of Massachusetts municipalities with
+income per capita closest to Marblehead's, we find that
+Marblehead's per capita tax receipts of  `r label_dollar()(mhd_pc_receipts)` is
+`r label_percent()((k_12_peer_median_pc_receipts - mhd_pc_receipts)/k_12_peer_median_pc_receipts)` 
+lower than the median of `r label_dollar()(k_12_peer_median_pc_receipts)` of its 
+closest per capita income peers.
+
+
+```{r, fig.height=5, fig.width=5}
+plot_rev_income <- rev_inc_sal %>%
+  filter(pci_peer) %>%
+  mutate(class = case_when(
+    Municipality=="Marblehead" ~ "Marblehead",
+    ns_peer ~ "Essex County",
+    TRUE ~ "Other Mass Municipalities"
+  ),
+  label=case_when(!ns_peer ~ NA,
+                  TRUE ~ Municipality)) %>%
+  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=Municipality,
+             color=class)) +
+  geom_point() +
+  ggrepel::geom_text_repel(show.legend = FALSE) +
+  geom_hline(yintercept=k_12_peer_median_pc_receipts, linetype="dashed",
+             color="#333333") +
+  annotate(geom="text", x=120e3, y=k_12_peer_median_pc_receipts-100, label="Median of Peers",
+           color="#333333"
+           ) +
+  scale_color_manual(values=c("Marblehead"="#F8766D", "Essex County"="#00BFC4", "Other Mass Municipalities"="gray"))+
+  scale_x_continuous(labels=label_dollar()) +
+  scale_y_continuous(labels=label_dollar()) +
+  labs(title="Tax Receipts",
+       subtitle="among Marblehead's Per Capita Income Peers",
+         x="Income per Capita",
+         y="Per Capita Tax Receipts") +
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        legend.position = "bottom")
+ggsave(here("figures", "rev_vs_income.png"), plot_rev_income, width = 5, height = 5, units = "in")
+plot_rev_income
+```
+# barplots of income and tax receipts
+```{r}
+pci_bar_plot <- rev_inc_sal %>%
+  filter(pci_peer) %>%
+  mutate(Municipality=fct_reorder(Municipality, DOR.Income.Per.Capita)) %>%
+  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = DOR.Income.Per.Capita, fill = FillCol)) +
+  geom_col() +
+  theme_minimal() +
+  labs(title = "Per Capita Income",
+       x = "DOR Income Per Capita") +
+  geom_text(aes(label = scales::dollar(DOR.Income.Per.Capita)), hjust = -0.1, size = 3)+
+  guides(fill="none")+
+  coord_cartesian(xlim = c(0, 260000)) +
+  theme(plot.caption = element_text(color = "white"),axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(), 
+        axis.title=element_blank(),
+        axis.text=element_text(size=10),
+        title=element_text(size=10))
+
+pci_bar_plot
+```
+# Average teacher salary of Marblehead and its income peers
+
+```{r}
+receipts_bar_plot <- rev_inc_sal %>%
+  filter(pci_peer) %>%
+  mutate(Municipality=fct_reorder(Municipality, per_capita_receipts),
+         label=label_dollar(accuracy=1)(per_capita_receipts)) %>%
+  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = per_capita_receipts, fill = FillCol, label=label)) +
+  geom_col() +
+  theme_minimal() +
+  labs(title = "Per Capita Tax Receipts",
+       y = "",
+       x = "Per Captia Tax Receipts",
+       caption = "*Districts with per capita income \nsimilar to Marblehead") +
+  geom_text(hjust = -0.1, size = 3)+
+   guides(fill="none")+
+   coord_cartesian(xlim = c(0, 10e3)) +
+  theme(axis.title=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text=element_text(size=10),
+        title=element_text(size=10))
+
+receipts_bar_plot
+```
+# salary bar plot
+```{r}
+sal_bar_plot <- rev_inc_sal %>%
+  filter(pci_peer) %>%
+  mutate(Municipality=fct_reorder(Municipality, Average.Salary)) %>%
+  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = Average.Salary, fill = FillCol)) +
+  geom_col() +
+  theme_minimal() +
+  labs(title = "Average Teacher Salary",
+       y = "",
+       x = "Average Teacher Salary",
+       caption = "*Districts with per capita income \nsimilar to Marblehead") +
+  geom_text(aes(label = scales::dollar(Average.Salary)), hjust = -0.1, size = 3)+
+   guides(fill="none")+
+   coord_cartesian(xlim = c(0, 150000)) +
+  theme(axis.title=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text=element_text(size=10),
+        title=element_text(size=10))
+
+sal_bar_plot
+```
+
+# Composite plot, per captia income and average teacher salary
+```{r}
+comp <- plot_grid(pci_bar_plot, receipts_bar_plot, align = "h")
+ggsave(here("figures", "pci_receipts_comp.png"), comp, width = 6, height = 4, units = "in")
+comp
+```
+
+# 3-up composite bar plot
+
+```{r}
+comp_3 <- plot_grid(pci_bar_plot, sal_bar_plot + theme(plot.caption=element_blank()), receipts_bar_plot, nrow = 1, align = "h")
+ggsave(here("figures", "pci_receipts_sal_comp.png"), comp_3, width = 9, height = 4, units = "in")
+comp_3
 ```
 
 

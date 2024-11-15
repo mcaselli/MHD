@@ -14,7 +14,10 @@ library(ggrepel)
 library(gghighlight)
 library(ggpubr)
 library(scales)
+library(cowplot)
+library(DT)
 ```
+
 ```{r, include=FALSE}
 source(here("read_and_process_data.R"))
 ```
@@ -40,17 +43,19 @@ plot1
 
 
 # Average teacher salary vs per capita income
+
+Using only k-12 districts
+
 ```{r}
-#plot DOR.Income by Average.Salary using ggplot
-plot2 <- ggplot(inc_sal, aes(x = DOR.Income.Per.Capita, y = Average.Salary)) +
+plot2 <- ggplot(rev_inc_sal, aes(x = DOR.Income.Per.Capita, y = Average.Salary)) +
   geom_point(alpha = .5) +
   geom_smooth(method = "loess", se = FALSE, color = "#7CAE00") +
   theme_minimal()+
-  geom_text_repel(data = inc_sal %>% filter( !(Municipality == "Marblehead")), aes(label = Municipality), max.overlaps = 20, size = 3, segment.color = 'grey80') +
-  geom_label_repel(data = inc_sal %>% filter(Municipality == "Marblehead"), aes(label = Municipality), color = "#F8766D", position = position_nudge_repel(x =100, y =15))+
-  geom_label_repel(data = inc_sal %>% filter(Municipality == "Gloucester" |Municipality == "Beverly"), aes(label = Municipality), color = "#3B9AB2") +
-  geom_point(data = inc_sal %>% filter(Municipality == "Marblehead"), color = "#F8766D", size = 3) +
-  geom_point(data = inc_sal %>% filter(Municipality == "Gloucester" |Municipality == "Beverly"), color = "#00BFC4", size = 2) +
+  geom_text_repel(data = rev_inc_sal %>% filter( !(Municipality == "Marblehead")), aes(label = Municipality), max.overlaps = 20, size = 3, segment.color = 'grey80') +
+  geom_label_repel(data = rev_inc_sal %>% filter(Municipality == "Marblehead"), aes(label = Municipality), color = "#F8766D", position = position_nudge_repel(x =100, y =15))+
+  geom_label_repel(data = rev_inc_sal %>% filter(Municipality == "Gloucester" |Municipality == "Beverly"), aes(label = Municipality), color = "#3B9AB2") +
+  geom_point(data = rev_inc_sal %>% filter(Municipality == "Marblehead"), color = "#F8766D", size = 3) +
+  geom_point(data = rev_inc_sal %>% filter(Municipality == "Gloucester" |Municipality == "Beverly"), color = "#00BFC4", size = 2) +
   scale_x_continuous(labels = scales::label_dollar()) +
   scale_y_continuous(labels = scales::label_dollar())+
   labs(x = "Per Capita Income",
@@ -60,72 +65,174 @@ plot2 <- ggplot(inc_sal, aes(x = DOR.Income.Per.Capita, y = Average.Salary)) +
         plot.caption = element_text(hjust = 0),
         axis.text=element_text(size=12),
         axis.title=element_text(size=18))
-
 ggsave(here("figures", "sal.png"), plot2, width = 9, height = 9, units = "in")
-
 plot2
 ```
+
+```{r, warning=FALSE}
+plot_sal_pci <- rev_inc_sal %>%
+  mutate(plot_class = case_when(Municipality == "Marblehead" ~ "MHD",
+                                ns_peer ~ "ns_peer",
+                                TRUE ~ "other"),
+         label=case_when(plot_class != "other" ~ Municipality,
+                         TRUE ~ NA)) %>%
+  ggplot(aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=label, color = plot_class)) +
+  geom_point() + 
+  geom_smooth(method = "loess", se = FALSE, color = "#7CAE00") +
+  geom_text_repel(data=rev_inc_sal %>% filter(!ns_peer),
+                  aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=Municipality), color = "grey") +
+  geom_label_repel(data=rev_inc_sal %>% filter(ns_peer & !Municipality=="Marblehead"),
+                  aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=Municipality), color = "#00BFC4") +
+  annotate(geom="label",
+           x=rev_inc_sal %>% filter(Municipality == "Marblehead") %>% pull(DOR.Income.Per.Capita) + 34e3,
+           y=rev_inc_sal %>% filter(Municipality == "Marblehead") %>% pull(Average.Salary) - 2e3,
+           label="Marblehead", color = "#F8766D") +
+  # geom_label_repel() +
+  scale_color_manual(values = c(MHD="#F8766D", ns_peer="#00BFC4", other="grey")) +
+  scale_x_continuous(labels = scales::label_dollar()) +
+  scale_y_continuous(labels = scales::label_dollar()) +
+  theme_minimal()  +
+  theme(legend.position="none") + 
+  labs(x = "Per Capita Income",
+       y = "Average Teacher Salary", 
+       caption = "*DOR Income Per Capita represents the annual income as \nreported on tax returns divided by the US Census Population.")
+
+ggsave(here("figures", "sal_vs_pci.png"), plot_sal_pci, width = 6, height = 4, units = "in")
+
+plot_sal_pci
+```
+```{r}
+rev_inc_sal %>%
+  mutate(plot_class = case_when(Municipality == "Marblehead" ~ "MHD",
+                                ns_peer ~ "ns_peer",
+                                TRUE ~ "other"),
+         label=case_when(plot_class != "other" ~ Municipality,
+                         TRUE ~ NA)) %>%
+  ggplot(aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=label, color = plot_class)) +
+  geom_point() + 
+  geom_smooth(method = "loess", se = FALSE, color = "#7CAE00") +
+  geom_text_repel(data=rev_inc_sal %>% filter(!ns_peer),
+                  aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=Municipality), color = "grey") +
+  geom_label_repel(data=rev_inc_sal %>% filter(ns_peer & !Municipality=="Marblehead"),
+                  aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=Municipality), color = "#00BFC4") +
+  annotate(geom="label",
+           x=rev_inc_sal %>% filter(Municipality == "Marblehead") %>% pull(DOR.Income.Per.Capita) + 5e3,
+           y=rev_inc_sal %>% filter(Municipality == "Marblehead") %>% pull(Average.Salary) - 2e3,
+           label="Marblehead", color = "#F8766D") +
+  # geom_label_repel() +
+  scale_color_manual(values = c(MHD="#F8766D", ns_peer="#00BFC4", other="grey")) +
+  scale_x_continuous(labels = scales::label_dollar()) +
+  scale_y_continuous(labels = scales::label_dollar()) +
+  theme_minimal()  +
+  theme(legend.position="none") + 
+  labs(x = "Per Capita Income",
+       y = "Average Teacher Salary", 
+       caption = "*DOR Income Per Capita represents the annual income as \nreported on tax returns divided by the US Census Population.") +
+  coord_cartesian(xlim = c(70e3, 120e3), ylim = c(70e3, 110e3))
+```
+
+
+```{r}
+rev_inc_sal %>%
+  filter(pci_peer) %>%
+  mutate(plot_class = case_when(Municipality == "Marblehead" ~ "MHD",
+                                ns_peer ~ "ns_peer",
+                                TRUE ~ "other"),
+         label=case_when(plot_class != "other" ~ Municipality,
+                         TRUE ~ Municipality)) %>%
+  ggplot(aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=label, color = plot_class)) +
+  geom_point() + 
+  geom_text_repel() +
+  scale_color_manual(values = c(MHD="#F8766D", ns_peer="#00BFC4", other="grey")) +
+  scale_x_continuous(labels = scales::label_dollar()) +
+  scale_y_continuous(labels = scales::label_dollar()) +
+  theme_minimal() +
+  theme(legend.position="none") + 
+  labs(x = "Per Capita Income",
+       y = "Average Teacher Salary", 
+       caption = "*DOR Income Per Capita represents the annual income as \nreported on tax returns divided by the US Census Population.")
+```
+
+```{r}
+rev_inc_sal %>%
+  mutate(plot_class = case_when(
+    Municipality == "Marblehead" ~ "Marblehead",
+    ns_peer ~ "North Shore PCI Peers",
+    TRUE ~ "Others"),
+    label=case_when(Municipality == "Marblehead" ~ "Marblehead",
+                    ns_peer ~ Municipality,
+                    TRUE ~ NA)) %>%
+  select(Municipality, contains("peer"), plot_class, label) %>%
+  datatable(filter="top", rownames=FALSE)
+```
+
 
 ```{r}
 mhd_income_peers %>%
   arrange(desc(Average.Salary)) %>%
   select(Municipality, Average.Salary, contains("percentile"))
 ```
-# Average teacher salary of Marblehead and its income peers
-```{r}
-#make a bar graph of the average salary of Marblehead and its income peers
-plot3<- mhd_income_peers %>%
-  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
-  ggplot(aes(y = reorder(Municipality, Average.Salary), x = Average.Salary, fill = FillCol)) +
-  geom_col() +
-  theme_minimal() +
-  labs(title = "Average Teacher Salary",
-       y = "",
-       x = "Average Teacher Salary",
-       caption = "*Districts with per capita income rates \nsimilar to Marblehead (+/- 5 percentage points)") +
-  geom_text(aes(label = scales::dollar(Average.Salary)), hjust = -0.1, size = 4)+
-   guides(fill="none")+
-   coord_cartesian(xlim = c(0, 150000)) +
-  theme(axis.title.x=element_blank(),
-        axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        axis.text=element_text(size=14),
-        axis.title=element_text(size=18),
-        title=element_text(size=18))
-plot3
-```
+
+
 # Per capita income of Marblehead and its income peers
 ```{r}
-#make a bar graph of per capita income of Marblehead and its income peers
-plot4<- mhd_income_peers %>%
+pci_bar_plot <- rev_inc_sal %>%
+  filter(pci_peer) %>%
+  mutate(Municipality=fct_reorder(Municipality, DOR.Income.Per.Capita)) %>%
   mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
-  ggplot(aes(y = reorder(Municipality, DOR.Income.Per.Capita), x = DOR.Income.Per.Capita, fill = FillCol)) +
+  ggplot(aes(y = Municipality, x = DOR.Income.Per.Capita, fill = FillCol)) +
   geom_col() +
   theme_minimal() +
   labs(title = "Per Capita Income",
-         y = "Municipality",
-       x = "DOR Income Per Capita",
-       caption = "*Districts with per capita income rates \nsimilar to Marblehead (+/- 5 percentage points)") +
-  geom_text(aes(label = scales::dollar(DOR.Income.Per.Capita)), hjust = -0.1, size = 4)+
+       x = "DOR Income Per Capita") +
+  geom_text(aes(label = scales::dollar(DOR.Income.Per.Capita)), hjust = -0.1, size = 3)+
   guides(fill="none")+
   coord_cartesian(xlim = c(0, 260000)) +
   theme(plot.caption = element_text(color = "white"),axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(), 
-        axis.title=element_text(size=18),
-        axis.text=element_text(size=14),
-        title=element_text(size=18))
-plot4
+        axis.title=element_blank(),
+        axis.text=element_text(size=10),
+        title=element_text(size=10))
+
+pci_bar_plot
 ```
-# composite chart, salary and income of Marblehead and its peers
+# Average teacher salary of Marblehead and its income peers
+
 ```{r}
-comp <- ggarrange( plot4, plot3, ncol = 2, nrow = 1, widths = c(.5, .5))
-ggsave(here("figures", "comp.png"), comp, width = 12, height = 12, units = "in")
+sal_bar_plot <- rev_inc_sal %>%
+  filter(pci_peer) %>%
+  mutate(Municipality=fct_reorder(Municipality, Average.Salary)) %>%
+  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = Average.Salary, fill = FillCol)) +
+  geom_col() +
+  theme_minimal() +
+  labs(title = "Average Teacher Salary",
+       y = "",
+       x = "Average Teacher Salary",
+       caption = "*Districts with per capita income \nsimilar to Marblehead") +
+  geom_text(aes(label = scales::dollar(Average.Salary)), hjust = -0.1, size = 3)+
+   guides(fill="none")+
+   coord_cartesian(xlim = c(0, 150000)) +
+  theme(axis.title=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text=element_text(size=10),
+        title=element_text(size=10))
+
+sal_bar_plot
+```
+
+# Composite plot, per captia income and average teacher salary
+```{r}
+comp <- plot_grid(pci_bar_plot, sal_bar_plot, align = "h")
+ggsave(here("figures", "comp.png"), comp, width = 6, height = 4, units = "in")
 comp
 ```
+
 # All Mass municipalities, tax receipts vs per capita income
 ```{r}
-plot5 <- rev_inc %>%
+plot5 <- rev_inc_sal %>%
    mutate(per_capita_receipts = Total.Receipts...9/Population) %>%
    ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=Municipality)) +
    geom_point(colour = "darkgrey", alpha = .5) +
@@ -134,8 +241,8 @@ plot5 <- rev_inc %>%
    scale_x_continuous(labels=label_dollar()) +
    scale_y_continuous(labels=label_dollar())+ 
    theme_minimal()+
-   labs(x= "DOR Income Per Capita",
-        y = "Taxes Per Capita")+
+   labs(x= "Per Capita Income",
+        y = "Per Capita Tax Receipts")+
    theme(plot.caption.position = "plot",
          plot.caption = element_text(hjust = 0),
          axis.text=element_text(size=12),
@@ -152,12 +259,13 @@ plot6<-  rev_inc_sal %>%
    ggplot(aes(x=per_capita_receipts, y=Average.Salary, label=Municipality)) +
    geom_point(colour = "darkgrey", alpha = .5) +
   #geom_text_repel(data = rev_inc_sal %>% filter( !(Municipality == "Marblehead")), aes(label = Municipality), max.overlaps = 5, size = 3, segment.color = 'grey80') +
+  geom_smooth(method = "loess", se = FALSE, color = "#7CAE00") +
   geom_label_repel(data = rev_inc_sal %>% filter(Municipality == "Marblehead"), aes(label = Municipality), color = "#F8766D")+
    geom_point(data = rev_inc_sal %>% filter(Municipality == "Marblehead"), color = "#F8766D", size = 3) +
-   scale_x_continuous(labels=label_dollar(), limits = c(0, 15000)) +
+   scale_x_continuous(labels=label_dollar()) +
    scale_y_continuous(labels=label_dollar())+ 
    theme_minimal()+
-   labs(x= "Taxes Per Capita",
+   labs(x= "Per Capita Tax Receipts",
         y = "Average Teacher Salary")+
    theme(plot.caption.position = "plot",
          plot.caption = element_text(hjust = 0),
@@ -175,51 +283,51 @@ mhd_tax_peers
 ```{r}
 #make a bar graph of the average salary of Marblehead and its tax peers
 plot7<- mhd_tax_peers %>%
-  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
-  ggplot(aes(y = reorder(Municipality, Average.Salary), x = Average.Salary, fill = FillCol)) +
+  mutate(Municipality=fct_reorder(Municipality, Average.Salary), 
+         FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = Average.Salary, fill = FillCol)) +
   geom_col() +
   theme_minimal() +
   labs(title = "Average Teacher Salary",
        y = "",
        x = "Average Teacher Salary",
-       caption = "*Districts with per capita tax receipts \nsimilar to Marblehead (+/- 5 percentage points)") +
-  geom_text(aes(label = scales::dollar(Average.Salary)), hjust = -0.1, size = 4)+
+       caption = "*Districts with per capita tax receipts \nsimilar to Marblehead") +
+  geom_text(aes(label = scales::dollar(Average.Salary)), hjust = -0.1, size = 3)+
   guides(fill="none")+
   coord_cartesian(xlim = c(0, 150000)) +
-  theme(axis.title.x=element_blank(),
+  theme(axis.title=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
-        axis.text=element_text(size=14),
-        axis.title=element_text(size=18),
-        title=element_text(size=18))
+        axis.text=element_text(size=10),
+        title=element_text(size=10))
 plot7
 ```
 
 ```{r}
 #make a bar graph of the average salary of Marblehead and its tax peers
 plot8<- mhd_tax_peers %>%
-  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
-  ggplot(aes(y = reorder(Municipality, per_capita_receipts), x = per_capita_receipts, fill = FillCol)) +
+  mutate(Municipality=fct_reorder(Municipality, per_capita_receipts), 
+         FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = per_capita_receipts, fill = FillCol)) +
   geom_col() +
   theme_minimal() +
-   labs(title = "Per Capita Taxes",
+   labs(title = "Per Capita Tax Receipts",
         y = "Municipality",
-        x = "Taxes Per Capita",
-        caption = "*Districts with per capita tax receipts \nsimilar to Marblehead (+/- 5 percentage points)") +
-  geom_text(aes(label = scales::dollar(per_capita_receipts)), hjust = -0.1, size = 4)+
+        x = "Taxes Per Capita") +
+  geom_text(aes(label = scales::label_dollar(accuracy=1)(per_capita_receipts)), hjust = -0.1, size = 3)+
   guides(fill="none")+
   coord_cartesian(xlim = c(0, 8000)) +
   theme(plot.caption = element_text(color = "white"),axis.title.x=element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(), 
-        axis.title=element_text(size=18),
-        axis.text=element_text(size=14),
-        title=element_text(size=18))
+        axis.title=element_blank(),
+        axis.text=element_text(size=10),
+        title=element_text(size=10))
 plot8
 ```
 ```{r}
-comp2 <- ggarrange( plot8, plot7, ncol = 2, nrow = 1, widths = c(.5, .5))
-ggsave(here("figures", "taxsalpeers.png"), comp2, width = 12, height = 12, units = "in")
+comp2 <- plot_grid(plot8, plot7, align = "h")
+ggsave(here("figures", "taxsalpeers.png"), comp2, width = 6, height = 4, units = "in")
 comp2
 ```
 
