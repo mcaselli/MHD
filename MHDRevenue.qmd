@@ -197,8 +197,62 @@ plot_rev_income <- rev_inc_sal %>%
 ggsave(here("figures", "rev_vs_income.png"), plot_rev_income, width = 5, height = 5, units = "in")
 plot_rev_income
 ```
+# barplots of income and tax receipts
+```{r}
+pci_bar_plot <- rev_inc_sal %>%
+  filter(pci_peer) %>%
+  mutate(Municipality=fct_reorder(Municipality, DOR.Income.Per.Capita)) %>%
+  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = DOR.Income.Per.Capita, fill = FillCol)) +
+  geom_col() +
+  theme_minimal() +
+  labs(title = "Per Capita Income",
+       x = "DOR Income Per Capita") +
+  geom_text(aes(label = scales::dollar(DOR.Income.Per.Capita)), hjust = -0.1, size = 3)+
+  guides(fill="none")+
+  coord_cartesian(xlim = c(0, 260000)) +
+  theme(plot.caption = element_text(color = "white"),axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(), 
+        axis.title=element_blank(),
+        axis.text=element_text(size=10),
+        title=element_text(size=10))
 
+pci_bar_plot
+```
+# Average teacher salary of Marblehead and its income peers
 
+```{r}
+receipts_bar_plot <- rev_inc_sal %>%
+  filter(pci_peer) %>%
+  mutate(Municipality=fct_reorder(Municipality, per_capita_receipts),
+         label=label_dollar(accuracy=1)(per_capita_receipts)) %>%
+  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = per_capita_receipts, fill = FillCol, label=label)) +
+  geom_col() +
+  theme_minimal() +
+  labs(title = "Per Capita Tax Receipts",
+       y = "",
+       x = "Per Captia Tax Receipts",
+       caption = "*Districts with per capita income \nsimilar to Marblehead") +
+  geom_text(hjust = -0.1, size = 3)+
+   guides(fill="none")+
+   coord_cartesian(xlim = c(0, 10e3)) +
+  theme(axis.title=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text=element_text(size=10),
+        title=element_text(size=10))
+
+receipts_bar_plot
+```
+
+# Composite plot, per captia income and average teacher salary
+```{r}
+comp <- plot_grid(pci_bar_plot, receipts_bar_plot, align = "h")
+ggsave(here("figures", "pci_receipts_comp.png"), comp, width = 6, height = 4, units = "in")
+comp
+```
 
 ```{r}
 rev_inc %>%
