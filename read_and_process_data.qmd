@@ -17,6 +17,22 @@ library(DT)
 source(here("read_and_process_data.R"))
 ```
 
+# Districts with full k-12 enrollment
+```{r}
+enrollment %>%
+  filter(full_k_12) %>%
+  select(District_NAME, District_Total) %>%
+  datatable(filter="top", rownames=FALSE)
+```
+
+# Municipalities with a school district matching their name
+```{r}
+rev_inc %>%
+  filter(Municipality %in% k_12_districts) %>%
+  datatable(filter="top", rownames=FALSE)
+```
+
+
 
 # municipalities in the teacher salary data that are not in the DOR data
 ```{r}
@@ -36,3 +52,7 @@ rev_inc %>%
 
 NOTE we can get some of these back by assigning the municipality to their 
 appropriate regional school district e.g. Hamilton and Wehnam to Hamilton-Wenham
+
+
+# Sources
+district enrollment by grade https://www.doe.mass.edu/infoservices/reports/enroll/default.html?yr=2324

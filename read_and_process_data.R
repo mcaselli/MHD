@@ -14,6 +14,9 @@ inc <- read_xlsx(here("data", "DOR_Income_EQV_Per_Capita.xlsx"),
                 .name_repair = "universal") %>% 
   mutate(across(DOR.Code:Cherry.Sheet.FY, as.factor))
 
+enrollment <- read_xlsx(here("data", "district-grade.xlsx"), 
+                        skip=5,
+                        .name_repair = "universal")
 
 ## ----------------------------------------------------------------------------------------------------------------------------------
 # check that the municipalities in the two datasets are set-equivalent
@@ -38,6 +41,17 @@ rev_inc <- rev %>%
          pc_levy_rank = rank(pc_levy),
          pc_levy_percentile = pc_levy_rank/n())
 
+
+# find districts with full k-12 enrollment
+enrollment <- enrollment %>%
+  mutate(k_6=rowSums(pick(K:Gr.6)),
+         Gr7_8 = rowSums(pick(Gr.7:Gr.8)),
+         Gr9_12 = rowSums(pick(Gr.9:Gr.12)),
+         full_k_12 = k_6 > 0 & Gr7_8 > 0 & Gr9_12)
+
+k_12_districts <- enrollment %>%
+  filter(full_k_12) %>%
+  pull(District_NAME)
 
 ## ----------------------------------------------------------------------------------------------------------------------------------
 mhd_percentiles <- rev_inc %>%
@@ -111,6 +125,7 @@ mhd_income_peers <- inc_sal %>%
 rev_inc_sal <- rev %>%
   left_join(inc, by=c("DOR.Code", "Municipality")) %>%
   left_join(sal, by="Municipality") %>%
+  filter(Municipality %in% k_12_districts) %>%
   filter(!is.na(Average.Salary)) %>%
   mutate(pci_rank = rank(DOR.Income.Per.Capita),
          pci_percentile=pci_rank/n(),
@@ -124,6 +139,17 @@ rev_inc_sal <- rev %>%
          salary_percentile=salary_rank/n())
 
 
+
+
+# flag marblehead peers in the rev_inc data
+rev_inc <-
+  rev_inc %>%
+  mutate(pci_peer = between(pci_percentile,
+                            mhd_percentiles$pci_percentile - pctile_half_width,
+                            mhd_percentiles$pci_percentile + pctile_half_width),
+         ns_peer = pci_peer & County=="ESSEX")
+
+
 ## ----------------------------------------------------------------------------------------------------------------------------------
 mhd_3_way_percentiles <- rev_inc_sal %>%
   filter(Municipality == "Marblehead") %>%
@@ -131,6 +157,15 @@ mhd_3_way_percentiles <- rev_inc_sal %>%
 
 
 ## ----------------------------------------------------------------------------------------------------------------------------------
+# flag pci peers in the rev_inc_sal data
+rev_inc_sal <-
+  rev_inc_sal %>%
+  mutate(pci_peer = between(pci_percentile,
+                            mhd_3_way_percentiles$pci_percentile - pctile_half_width,
+                            mhd_3_way_percentiles$pci_percentile + pctile_half_width),
+         ns_peer = pci_peer & County=="ESSEX")
+
+
 mhd_tax_peers <- rev_inc_sal %>%
   filter(!is.na(Average.Salary)) %>%
   filter(between(pc_receipts_percentile,
