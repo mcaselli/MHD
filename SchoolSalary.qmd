@@ -77,7 +77,8 @@ plot_sal_pci <- rev_inc_sal %>%
          label=case_when(plot_class != "other" ~ Municipality,
                          TRUE ~ NA)) %>%
   ggplot(aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=label, color = plot_class)) +
-  geom_point(alpha=0.5) + 
+  geom_point(aes(alpha=plot_class)) +
+  scale_alpha_manual(values=c("MHD"=1, "ns_peer"=1, "other"=0.2))+
   geom_smooth(method = "loess", se = FALSE, color = "#7CAE00") +
   geom_text_repel(data=rev_inc_sal %>% filter(!ns_peer),
                   aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=Municipality), color = "#666666") +
@@ -88,7 +89,7 @@ plot_sal_pci <- rev_inc_sal %>%
            y=rev_inc_sal %>% filter(Municipality == "Marblehead") %>% pull(Average.Salary) - 3e3,
            label="Marblehead", color = "#F8766D") +
   # geom_label_repel() +
-  scale_color_manual(values = c(MHD="#F8766D", ns_peer="#00BFC4", other="#333333")) +
+  scale_color_manual(values = c(MHD="#F8766D", ns_peer="#00BFC4", other="black")) +
   scale_x_continuous(labels = scales::label_dollar(scale=1/1e3, suffix="k")) +
   scale_y_continuous(labels = scales::label_dollar(scale=1/1e3, suffix="k")) +
   theme_classic()  +
