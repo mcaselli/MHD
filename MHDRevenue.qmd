@@ -220,26 +220,33 @@ ggsave(here("figures", "rev_vs_income.png"), plot_rev_income, width = 5, height 
 plot_rev_income
 ```
 # barplots of income and tax receipts
+
+```{r}
+sizes <- list("geom_text_size" = 2.8, "axis_text_size" = 8, "title_size" = 9)
+```
+
+
 ```{r}
 pci_bar_plot <- rev_inc_sal %>%
   filter(pci_peer) %>%
-  mutate(Municipality=fct_reorder(Municipality, DOR.Income.Per.Capita)) %>%
-  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
-  ggplot(aes(y = Municipality, x = DOR.Income.Per.Capita, fill = FillCol)) +
+  mutate(Municipality=fct_reorder(Municipality, DOR.Income.Per.Capita),
+         label=label_dollar(accuracy=1)(DOR.Income.Per.Capita),
+         FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = DOR.Income.Per.Capita, fill = FillCol, label=label)) +
   geom_col() +
-  theme_minimal() +
   labs(title = "Per Capita Income",
        x = "DOR Income Per Capita") +
-  geom_text(aes(label = scales::dollar(DOR.Income.Per.Capita)), hjust = -0.1, size = 3)+
+  geom_text(hjust = -0.1, size = sizes$geom_text_size)+
   guides(fill="none")+
-  coord_cartesian(xlim = c(0, 260000)) +
-  theme(plot.caption = element_text(color = "white"),axis.title.x=element_blank(),
+  coord_cartesian(xlim = c(0, 260e3)) +
+  theme_minimal() +
+  theme(axis.title=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
         axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(), 
-        axis.title=element_blank(),
-        axis.text=element_text(size=10),
-        title=element_text(size=10))
-
+        axis.ticks.x=element_blank(),
+        axis.text=element_text(size=sizes$axis_text_size),
+        title=element_text(size=sizes$title_size))
 pci_bar_plot
 ```
 # Average teacher salary of Marblehead and its income peers
@@ -248,23 +255,23 @@ pci_bar_plot
 receipts_bar_plot <- rev_inc_sal %>%
   filter(pci_peer) %>%
   mutate(Municipality=fct_reorder(Municipality, per_capita_receipts),
-         label=label_dollar(accuracy=1)(per_capita_receipts)) %>%
-  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+         label=label_dollar(accuracy=1)(per_capita_receipts),
+         FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
   ggplot(aes(y = Municipality, x = per_capita_receipts, fill = FillCol, label=label)) +
   geom_col() +
-  theme_minimal() +
   labs(title = "Per Capita Tax Receipts",
-       y = "",
-       x = "Per Captia Tax Receipts",
-       caption = "*Districts with per capita income \nsimilar to Marblehead") +
-  geom_text(hjust = -0.1, size = 3)+
-   guides(fill="none")+
-   coord_cartesian(xlim = c(0, 10e3)) +
+       x = "Per Captia Tax Receipts") +
+  geom_text(hjust = -0.1, size = sizes$geom_text_size)+
+  guides(fill="none")+
+  coord_cartesian(xlim = c(0, 10e3)) +
+  theme_minimal() +
   theme(axis.title=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
-        axis.text=element_text(size=10),
-        title=element_text(size=10))
+        axis.text=element_text(size=sizes$axis_text_size),
+        title=element_text(size=sizes$title_size))
 
 receipts_bar_plot
 ```
@@ -272,40 +279,50 @@ receipts_bar_plot
 ```{r}
 sal_bar_plot <- rev_inc_sal %>%
   filter(pci_peer) %>%
-  mutate(Municipality=fct_reorder(Municipality, Average.Salary)) %>%
-  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
-  ggplot(aes(y = Municipality, x = Average.Salary, fill = FillCol)) +
+  mutate(Municipality=fct_reorder(Municipality, Average.Salary),
+         label=label_dollar(accuracy=1)(Average.Salary),
+         FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = Average.Salary, fill = FillCol, label=label)) +
   geom_col() +
-  theme_minimal() +
   labs(title = "Average Teacher Salary",
        y = "",
-       x = "Average Teacher Salary",
-       caption = "*Districts with per capita income \nsimilar to Marblehead") +
-  geom_text(aes(label = scales::dollar(Average.Salary)), hjust = -0.1, size = 3)+
-   guides(fill="none")+
-   coord_cartesian(xlim = c(0, 150000)) +
+       x = "Average Teacher Salary") +
+  geom_text(hjust = -0.1, size = sizes$geom_text_size)+
+  guides(fill="none")+
+  coord_cartesian(xlim = c(0, 260e3)) +
+  theme_minimal() +
   theme(axis.title=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
-        axis.text=element_text(size=10),
-        title=element_text(size=10))
+        axis.text=element_text(size=sizes$axis_text_size),
+        title=element_text(size=sizes$title_size))
 
 sal_bar_plot
+```
+
+
+
+# 3-up composite bar plot
+
+```{r, fig.width=6.4, fig.height=3.2}
+comp_3 <- plot_grid(pci_bar_plot, sal_bar_plot + theme(plot.caption=element_blank()), receipts_bar_plot, nrow = 1, align = "h")
+ggsave(here("figures", "pci_receipts_sal_comp.png"), comp_3, 
+       width = 6.4, height = 3.2, dpi=200, scaling=0.8, units = "in")
+ggsave(here("figures", "pci_receipts_sal_comp.jpeg"), comp_3, 
+       width = 6.4, height = 3.2, dpi=200, scaling=0.8, units = "in")
+ggsave(here("figures", "pci_receipts_sal_comp.pdf"), comp_3, 
+       width = 6.4, height = 3.2, dpi=200, units = "in")
+comp_3
 ```
 
 # Composite plot, per captia income and average teacher salary
 ```{r}
 comp <- plot_grid(pci_bar_plot, receipts_bar_plot, align = "h")
-ggsave(here("figures", "pci_receipts_comp.png"), comp, width = 6, height = 4, units = "in")
+ggsave(here("figures", "pci_receipts_comp.png"), comp, 
+       width = 3.2, height = 4, units = "in")
 comp
-```
-
-# 3-up composite bar plot
-
-```{r}
-comp_3 <- plot_grid(pci_bar_plot, sal_bar_plot + theme(plot.caption=element_blank()), receipts_bar_plot, nrow = 1, align = "h")
-ggsave(here("figures", "pci_receipts_sal_comp.png"), comp_3, width = 9, height = 4, units = "in")
-comp_3
 ```
 
 
