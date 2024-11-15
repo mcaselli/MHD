@@ -37,28 +37,37 @@ In terms of tax receipts per capita, Marblehead ranks
 `r max(rev_inc$pc_receipts_rank) - mhd_percentiles$pc_receipts_rank + 1` of Massachusetts municipalities.
 
 
-```{r}
+```{r, fig.width=3.3, fig.height=3.3}
 receipts_income_plot <- rev_inc %>%
   mutate(label=case_when(Municipality=="Marblehead" ~ Municipality,
                          TRUE ~ NA)) %>%
   ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=label)) +
   geom_point(color="#F8766D") +
-  annotate(geom="text",
-           x=rev_inc %>% filter(Municipality=="Marblehead") %>% pull(DOR.Income.Per.Capita) + 30e3,
-           y=rev_inc %>% filter(Municipality=="Marblehead") %>% pull(per_capita_receipts)-800,
-           label="Marblehead") +
+  annotate(geom="label",
+           x=rev_inc %>% filter(Municipality=="Marblehead") %>% pull(DOR.Income.Per.Capita) + 50e3,
+           y=rev_inc %>% filter(Municipality=="Marblehead") %>% pull(per_capita_receipts)-1.3e3,
+           label="Marblehead", 
+           color="#F8766D") +
   gghighlight::gghighlight(Municipality == "Marblehead") +
-  scale_x_continuous(labels=label_dollar()) +
-  scale_y_continuous(labels=label_dollar()) +
-  labs(title="All Massachusetts Municipalities",
-         x="Per Capita Income",
-         y="Per Capita Tax Receipts") +
-  theme_minimal()
+  scale_x_continuous(labels = scales::label_dollar(scale=1/1e3, suffix="k")) +
+  scale_y_continuous(labels = scales::label_dollar(scale=1/1e3, suffix="k")) +
+  labs(x="Per Capita Income",
+       y="Per Capita Tax Receipts") +
+  theme_classic()  +
+  theme(legend.position="none",
+        axis.text=element_text(size=12),
+        axis.title=element_text(size=12),
+        axis.line = element_line(color="gray")) #+
+  #coord_cartesian(xlim=c(0, 250e3), ylim=c(0, 15e3))
 
-ggsave(here("figures", "receipts_income_plot.png"), receipts_income_plot, width=5, height=4, units="in")
+ggsave(here("figures", "receipts_income_plot.png"), receipts_income_plot, 
+       width=3.3, height=3.3, dpi=200, scaling=0.8, units="in")
+ggsave(here("figures", "receipts_income_plot.jpeg"), receipts_income_plot, 
+       width=3.3, height=3.3, dpi=200, scaling=0.8, units="in")
+ggsave(here("figures", "receipts_income_plot.pdf"), receipts_income_plot, 
+       width=3.3, height=3.3, dpi=200, units="in")
+
 receipts_income_plot
-
-
 ```
 
 
