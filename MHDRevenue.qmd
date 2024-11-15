@@ -40,15 +40,18 @@ In terms of tax receipts per capita, Marblehead ranks
 ```{r, fig.width=3.3, fig.height=3.3}
 receipts_income_plot <- rev_inc %>%
   mutate(label=case_when(Municipality=="Marblehead" ~ Municipality,
-                         TRUE ~ NA)) %>%
+                         TRUE ~ NA),
+         plot_class=case_when(Municipality=="Marblehead" ~ "MHD",
+                              TRUE ~ "other")) %>%
   ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=label)) +
-  geom_point(color="#F8766D") +
+  geom_point(aes(color=plot_class, alpha=plot_class)) +
+  scale_alpha_manual(values=c("MHD"=1, "other"=0.2)) +
+  scale_color_manual(values=c("MHD"="#F8766D", "other"="black")) +
   annotate(geom="label",
            x=rev_inc %>% filter(Municipality=="Marblehead") %>% pull(DOR.Income.Per.Capita) + 50e3,
            y=rev_inc %>% filter(Municipality=="Marblehead") %>% pull(per_capita_receipts)-1.3e3,
            label="Marblehead", 
            color="#F8766D") +
-  gghighlight::gghighlight(Municipality == "Marblehead") +
   scale_x_continuous(labels = scales::label_dollar(scale=1/1e3, suffix="k")) +
   scale_y_continuous(labels = scales::label_dollar(scale=1/1e3, suffix="k")) +
   labs(x="Per Capita Income",
