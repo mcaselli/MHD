@@ -42,15 +42,27 @@ of school districts in the state have a higher average teacher salary.
 
 
 ```{r}
-rev_inc %>%
-  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=Municipality)) +
-  geom_point() +
+receipts_income_plot <- rev_inc %>%
+  mutate(label=case_when(Municipality=="Marblehead" ~ Municipality,
+                         TRUE ~ NA)) %>%
+  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=label)) +
+  geom_point(color="#F8766D") +
+  annotate(geom="text",
+           x=rev_inc %>% filter(Municipality=="Marblehead") %>% pull(DOR.Income.Per.Capita) + 30e3,
+           y=rev_inc %>% filter(Municipality=="Marblehead") %>% pull(per_capita_receipts)-800,
+           label="Marblehead") +
   gghighlight::gghighlight(Municipality == "Marblehead") +
   scale_x_continuous(labels=label_dollar()) +
   scale_y_continuous(labels=label_dollar()) +
   labs(title="All Massachusetts Municipalities",
-         x="Income per Capita",
-         y="Per Capita Tax Receipts")
+         x="Per Capita Income",
+         y="Per Capita Tax Receipts") +
+  theme_minimal()
+
+ggsave(here("figures", "receipts_income_plot.png"), receipts_income_plot, width=5, height=4, units="in")
+receipts_income_plot
+
+
 ```
 
 ```{r}
