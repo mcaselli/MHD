@@ -246,6 +246,30 @@ receipts_bar_plot <- rev_inc_sal %>%
 
 receipts_bar_plot
 ```
+# salary bar plot
+```{r}
+sal_bar_plot <- rev_inc_sal %>%
+  filter(pci_peer) %>%
+  mutate(Municipality=fct_reorder(Municipality, Average.Salary)) %>%
+  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = Average.Salary, fill = FillCol)) +
+  geom_col() +
+  theme_minimal() +
+  labs(title = "Average Teacher Salary",
+       y = "",
+       x = "Average Teacher Salary",
+       caption = "*Districts with per capita income \nsimilar to Marblehead") +
+  geom_text(aes(label = scales::dollar(Average.Salary)), hjust = -0.1, size = 3)+
+   guides(fill="none")+
+   coord_cartesian(xlim = c(0, 150000)) +
+  theme(axis.title=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text=element_text(size=10),
+        title=element_text(size=10))
+
+sal_bar_plot
+```
 
 # Composite plot, per captia income and average teacher salary
 ```{r}
@@ -253,6 +277,15 @@ comp <- plot_grid(pci_bar_plot, receipts_bar_plot, align = "h")
 ggsave(here("figures", "pci_receipts_comp.png"), comp, width = 6, height = 4, units = "in")
 comp
 ```
+
+# 3-up composite bar plot
+
+```{r}
+comp_3 <- plot_grid(pci_bar_plot, sal_bar_plot + theme(plot.caption=element_blank()), receipts_bar_plot, nrow = 1, align = "h")
+ggsave(here("figures", "pci_receipts_sal_comp.png"), comp_3, width = 9, height = 4, units = "in")
+comp_3
+```
+
 
 ```{r}
 rev_inc %>%
