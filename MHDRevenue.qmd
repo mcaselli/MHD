@@ -67,11 +67,11 @@ receipts_income_plot <- rev_inc %>%
         axis.line = element_line(color="gray")) #+
   #coord_cartesian(xlim=c(0, 250e3), ylim=c(0, 15e3))
 
-ggsave(here("figures", "receipts_income_plot.png"), receipts_income_plot, 
+ggsave(here("figures", "fig_2_receipts_vs_pci.png"), receipts_income_plot, 
        width=3.3, height=3.3, dpi=200, units="in")
-ggsave(here("figures", "receipts_income_plot.jpeg"), receipts_income_plot, 
+ggsave(here("figures", "fig_2_receipts_vs_pci.jpeg"), receipts_income_plot, 
        width=3.3, height=3.3, dpi=200, units="in")
-ggsave(here("figures", "receipts_income_plot.pdf"), receipts_income_plot, 
+ggsave(here("figures", "fig_2_receipts_vs_pci.pdf"), receipts_income_plot, 
        width=3.3, height=3.3, dpi=200, units="in")
 
 receipts_income_plot
@@ -315,11 +315,11 @@ sal_bar_plot
 
 ```{r, fig.width=6.4, fig.height=3.2}
 comp_3 <- plot_grid(pci_bar_plot, sal_bar_plot + theme(plot.caption=element_blank()), receipts_bar_plot, nrow = 1, align = "h")
-ggsave(here("figures", "pci_receipts_sal_comp.png"), comp_3, 
+ggsave(here("figures", "fig_3_pci_salary_receipts.png"), comp_3, 
        width = 6.4, height = 3.2, dpi=200, units = "in")
-ggsave(here("figures", "pci_receipts_sal_comp.jpeg"), comp_3, 
+ggsave(here("figures", "fig_3_pci_salary_receipts.jpeg"), comp_3, 
        width = 6.4, height = 3.2, dpi=200, units = "in")
-ggsave(here("figures", "pci_receipts_sal_comp.pdf"), comp_3, 
+ggsave(here("figures", "fig_3_pci_salary_receipts.pdf"), comp_3, 
        width = 6.4, height = 3.2, dpi=200, units = "in")
 comp_3
 ```

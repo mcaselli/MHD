@@ -105,11 +105,11 @@ plot_sal_pci <- rev_inc_sal %>%
   labs(x = "Per Capita Income",
        y = "Average Teacher Salary")
 
-ggsave(here("figures", "sal_vs_pci.jpeg"), plot_sal_pci, width = 3.3, height = 3.3,
+ggsave(here("figures", "fig_1_sal_vs_pci.jpeg"), plot_sal_pci, width = 3.3, height = 3.3,
        units = "in", dpi=200)
-ggsave(here("figures", "sal_vs_pci.png"), plot_sal_pci, width = 3.3, height = 3.3,
+ggsave(here("figures", "fig_1_sal_vs_pci.png"), plot_sal_pci, width = 3.3, height = 3.3,
        units = "in", dpi=200)
-ggsave(here("figures", "sal_vs_pci.pdf"), plot_sal_pci, width = 3.3, height = 3.3,
+ggsave(here("figures", "fig_1_sal_vs_pci.pdf"), plot_sal_pci, width = 3.3, height = 3.3,
        units = "in", dpi=200)
 
 plot_sal_pci
