@@ -101,7 +101,8 @@ plot_sal_pci <- rev_inc_sal %>%
   theme(legend.position="none",
         axis.text=element_text(size=sizes$axis_text_size),
         axis.title=element_text(size=sizes$axis_title_size),
-        axis.line = element_line(color="gray")) + 
+        axis.line = element_line(color="gray"),
+        plot.background = element_rect(fill = "white", linetype = "blank")) + 
   labs(x = "Per Capita Income",
        y = "Average Teacher Salary")
 

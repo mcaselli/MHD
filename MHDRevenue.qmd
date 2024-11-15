@@ -64,7 +64,8 @@ receipts_income_plot <- rev_inc %>%
   theme(legend.position="none",
         axis.text=element_text(size=sizes$axis_text_size),
         axis.title=element_text(size=sizes$aixs_title_size),
-        axis.line = element_line(color="gray")) #+
+        axis.line = element_line(color="gray"),
+        plot.background = element_rect(fill = "white", linetype = "blank")) #+
   #coord_cartesian(xlim=c(0, 250e3), ylim=c(0, 15e3))
 
 ggsave(here("figures", "fig_2_receipts_vs_pci.png"), receipts_income_plot, 
@@ -250,6 +251,7 @@ pci_bar_plot <- rev_inc_sal %>%
   theme(axis.title=element_blank(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
+        plot.background = element_rect(fill = "white", linetype = "blank"),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
         axis.text=element_text(size=barplot_sizes$axis_text_size),
@@ -275,6 +277,7 @@ receipts_bar_plot <- rev_inc_sal %>%
   theme(axis.title=element_blank(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
+        plot.background = element_rect(fill = "white", linetype = "blank"),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
         axis.text=element_text(size=barplot_sizes$axis_text_size),
@@ -301,6 +304,7 @@ sal_bar_plot <- rev_inc_sal %>%
   theme(axis.title=element_blank(),
         panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(),
+        plot.background = element_rect(fill = "white", linetype = "blank"),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
         axis.text=element_text(size=barplot_sizes$axis_text_size),
@@ -314,7 +318,7 @@ sal_bar_plot
 # 3-up composite bar plot
 
 ```{r, fig.width=6.4, fig.height=3.2}
-comp_3 <- plot_grid(pci_bar_plot, sal_bar_plot + theme(plot.caption=element_blank()), receipts_bar_plot, nrow = 1, align = "h")
+comp_3 <- plot_grid(pci_bar_plot, sal_bar_plot, receipts_bar_plot, nrow = 1, align = "h")
 ggsave(here("figures", "fig_3_pci_salary_receipts.png"), comp_3, 
        width = 6.4, height = 3.2, dpi=200, units = "in")
 ggsave(here("figures", "fig_3_pci_salary_receipts.jpeg"), comp_3, 
