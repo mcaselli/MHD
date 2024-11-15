@@ -68,8 +68,11 @@ plot2 <- ggplot(rev_inc_sal, aes(x = DOR.Income.Per.Capita, y = Average.Salary))
 ggsave(here("figures", "sal.png"), plot2, width = 9, height = 9, units = "in")
 plot2
 ```
+```{r}
+sizes <- list("axis_text_size" = 9, "axis_title_size" = 9, "title_size" = 9)
+```
 
-```{r, warning=FALSE}
+```{r, warning=FALSE, fig.width=3.3, fig.height=2}
 plot_sal_pci <- rev_inc_sal %>%
   mutate(plot_class = case_when(Municipality == "Marblehead" ~ "MHD",
                                 ns_peer ~ "ns_peer",
@@ -77,30 +80,43 @@ plot_sal_pci <- rev_inc_sal %>%
          label=case_when(plot_class != "other" ~ Municipality,
                          TRUE ~ NA)) %>%
   ggplot(aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=label, color = plot_class)) +
-  geom_point() + 
+  geom_point(aes(alpha=plot_class)) +
+  scale_alpha_manual(values=c("MHD"=1, "ns_peer"=1, "other"=0.2))+
   geom_smooth(method = "loess", se = FALSE, color = "#7CAE00") +
   geom_text_repel(data=rev_inc_sal %>% filter(!ns_peer),
-                  aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=Municipality), color = "grey") +
+                  aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=Municipality),
+                  size=sizes$axis_text_size/.pt, color = "#666666") +
   geom_label_repel(data=rev_inc_sal %>% filter(ns_peer & !Municipality=="Marblehead"),
-                  aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=Municipality), color = "#00BFC4") +
+                  aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=Municipality),
+                  size=sizes$axis_text_size/.pt, color = "#00BFC4") +
   annotate(geom="label",
-           x=rev_inc_sal %>% filter(Municipality == "Marblehead") %>% pull(DOR.Income.Per.Capita) + 34e3,
-           y=rev_inc_sal %>% filter(Municipality == "Marblehead") %>% pull(Average.Salary) - 2e3,
-           label="Marblehead", color = "#F8766D") +
+           x=rev_inc_sal %>% filter(Municipality == "Marblehead") %>% pull(DOR.Income.Per.Capita) + 54e3,
+           y=rev_inc_sal %>% filter(Municipality == "Marblehead") %>% pull(Average.Salary) - 3e3,
+           label="Marblehead", size=sizes$axis_text_size/.pt, color = "#F8766D") +
   # geom_label_repel() +
-  scale_color_manual(values = c(MHD="#F8766D", ns_peer="#00BFC4", other="grey")) +
-  scale_x_continuous(labels = scales::label_dollar()) +
-  scale_y_continuous(labels = scales::label_dollar()) +
-  theme_minimal()  +
-  theme(legend.position="none") + 
+  scale_color_manual(values = c(MHD="#F8766D", ns_peer="#00BFC4", other="black")) +
+  scale_x_continuous(labels = scales::label_dollar(scale=1/1e3, suffix="k")) +
+  scale_y_continuous(labels = scales::label_dollar(scale=1/1e3, suffix="k")) +
+  theme_classic()  +
+  theme(legend.position="none",
+        axis.text=element_text(size=sizes$axis_text_size),
+        axis.title=element_text(size=sizes$axis_title_size),
+        axis.line = element_line(color="gray")) + 
   labs(x = "Per Capita Income",
-       y = "Average Teacher Salary", 
-       caption = "*DOR Income Per Capita represents the annual income as \nreported on tax returns divided by the US Census Population.")
+       y = "Average Teacher Salary")
 
-ggsave(here("figures", "sal_vs_pci.png"), plot_sal_pci, width = 6, height = 4, units = "in")
+ggsave(here("figures", "fig_1_sal_vs_pci.jpeg"), plot_sal_pci, width = 3.3, height = 3.3,
+       units = "in", dpi=200)
+ggsave(here("figures", "fig_1_sal_vs_pci.png"), plot_sal_pci, width = 3.3, height = 3.3,
+       units = "in", dpi=200)
+ggsave(here("figures", "fig_1_sal_vs_pci.pdf"), plot_sal_pci, width = 3.3, height = 3.3,
+       units = "in", dpi=200)
 
 plot_sal_pci
 ```
+
+
+
 ```{r}
 rev_inc_sal %>%
   mutate(plot_class = case_when(Municipality == "Marblehead" ~ "MHD",

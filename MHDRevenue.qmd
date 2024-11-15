@@ -11,6 +11,7 @@ library(here)
 library(tidyverse)
 library(readxl)
 library(scales)
+library(cowplot)
 ```
 ```{r, include=FALSE}
 source(here("read_and_process_data.R"))
@@ -35,29 +36,45 @@ in income per capita of the `r n_municipalities` municipalities in the state, hi
 In terms of tax receipts per capita, Marblehead ranks
 `r max(rev_inc$pc_receipts_rank) - mhd_percentiles$pc_receipts_rank + 1` of Massachusetts municipalities.
 
-
 ```{r}
+sizes <- list("axis_text_size" = 9, "axis_title_size" = 9, "title_size" = 9)
+```
+
+
+```{r, fig.width=3.3, fig.height=3.3}
 receipts_income_plot <- rev_inc %>%
   mutate(label=case_when(Municipality=="Marblehead" ~ Municipality,
-                         TRUE ~ NA)) %>%
+                         TRUE ~ NA),
+         plot_class=case_when(Municipality=="Marblehead" ~ "MHD",
+                              TRUE ~ "other")) %>%
   ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=label)) +
-  geom_point(color="#F8766D") +
-  annotate(geom="text",
-           x=rev_inc %>% filter(Municipality=="Marblehead") %>% pull(DOR.Income.Per.Capita) + 30e3,
-           y=rev_inc %>% filter(Municipality=="Marblehead") %>% pull(per_capita_receipts)-800,
-           label="Marblehead") +
-  gghighlight::gghighlight(Municipality == "Marblehead") +
-  scale_x_continuous(labels=label_dollar()) +
-  scale_y_continuous(labels=label_dollar()) +
-  labs(title="All Massachusetts Municipalities",
-         x="Per Capita Income",
-         y="Per Capita Tax Receipts") +
-  theme_minimal()
+  geom_point(aes(color=plot_class, alpha=plot_class)) +
+  scale_alpha_manual(values=c("MHD"=1, "other"=0.2)) +
+  scale_color_manual(values=c("MHD"="#F8766D", "other"="black")) +
+  annotate(geom="label",
+           x=rev_inc %>% filter(Municipality=="Marblehead") %>% pull(DOR.Income.Per.Capita) + 50e3,
+           y=rev_inc %>% filter(Municipality=="Marblehead") %>% pull(per_capita_receipts)-1.3e3,
+           label="Marblehead", 
+           color="#F8766D", size=sizes$axis_text_size/.pt) +
+  scale_x_continuous(labels = scales::label_dollar(scale=1/1e3, suffix="k")) +
+  scale_y_continuous(labels = scales::label_dollar(scale=1/1e3, suffix="k")) +
+  labs(x="Per Capita Income",
+       y="Per Capita Tax Receipts") +
+  theme_classic()  +
+  theme(legend.position="none",
+        axis.text=element_text(size=sizes$axis_text_size),
+        axis.title=element_text(size=sizes$aixs_title_size),
+        axis.line = element_line(color="gray")) #+
+  #coord_cartesian(xlim=c(0, 250e3), ylim=c(0, 15e3))
 
-ggsave(here("figures", "receipts_income_plot.png"), receipts_income_plot, width=5, height=4, units="in")
+ggsave(here("figures", "fig_2_receipts_vs_pci.png"), receipts_income_plot, 
+       width=3.3, height=3.3, dpi=200, units="in")
+ggsave(here("figures", "fig_2_receipts_vs_pci.jpeg"), receipts_income_plot, 
+       width=3.3, height=3.3, dpi=200, units="in")
+ggsave(here("figures", "fig_2_receipts_vs_pci.pdf"), receipts_income_plot, 
+       width=3.3, height=3.3, dpi=200, units="in")
+
 receipts_income_plot
-
-
 ```
 
 
@@ -210,26 +227,33 @@ ggsave(here("figures", "rev_vs_income.png"), plot_rev_income, width = 5, height 
 plot_rev_income
 ```
 # barplots of income and tax receipts
+
+```{r}
+barplot_sizes <- list("axis_text_size" = 7, "axis_title_size" = 7, "title_size" = 7)
+```
+
+
 ```{r}
 pci_bar_plot <- rev_inc_sal %>%
   filter(pci_peer) %>%
-  mutate(Municipality=fct_reorder(Municipality, DOR.Income.Per.Capita)) %>%
-  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
-  ggplot(aes(y = Municipality, x = DOR.Income.Per.Capita, fill = FillCol)) +
+  mutate(Municipality=fct_reorder(Municipality, DOR.Income.Per.Capita),
+         label=label_dollar(accuracy=1)(DOR.Income.Per.Capita),
+         FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = DOR.Income.Per.Capita, fill = FillCol, label=label)) +
   geom_col() +
-  theme_minimal() +
   labs(title = "Per Capita Income",
        x = "DOR Income Per Capita") +
-  geom_text(aes(label = scales::dollar(DOR.Income.Per.Capita)), hjust = -0.1, size = 3)+
+  geom_text(hjust = -0.1, size = barplot_sizes$axis_text_size/.pt)+
   guides(fill="none")+
-  coord_cartesian(xlim = c(0, 260000)) +
-  theme(plot.caption = element_text(color = "white"),axis.title.x=element_blank(),
+  coord_cartesian(xlim = c(0, 260e3)) +
+  theme_minimal() +
+  theme(axis.title=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
         axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(), 
-        axis.title=element_blank(),
-        axis.text=element_text(size=10),
-        title=element_text(size=10))
-
+        axis.ticks.x=element_blank(),
+        axis.text=element_text(size=barplot_sizes$axis_text_size),
+        title=element_text(size=barplot_sizes$title_size))
 pci_bar_plot
 ```
 # Average teacher salary of Marblehead and its income peers
@@ -238,23 +262,23 @@ pci_bar_plot
 receipts_bar_plot <- rev_inc_sal %>%
   filter(pci_peer) %>%
   mutate(Municipality=fct_reorder(Municipality, per_capita_receipts),
-         label=label_dollar(accuracy=1)(per_capita_receipts)) %>%
-  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+         label=label_dollar(accuracy=1)(per_capita_receipts),
+         FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
   ggplot(aes(y = Municipality, x = per_capita_receipts, fill = FillCol, label=label)) +
   geom_col() +
-  theme_minimal() +
   labs(title = "Per Capita Tax Receipts",
-       y = "",
-       x = "Per Captia Tax Receipts",
-       caption = "*Districts with per capita income \nsimilar to Marblehead") +
-  geom_text(hjust = -0.1, size = 3)+
-   guides(fill="none")+
-   coord_cartesian(xlim = c(0, 10e3)) +
+       x = "Per Captia Tax Receipts") +
+  geom_text(hjust = -0.1, size = barplot_sizes$axis_text_size/.pt)+
+  guides(fill="none")+
+  coord_cartesian(xlim = c(0, 10e3)) +
+  theme_minimal() +
   theme(axis.title=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
-        axis.text=element_text(size=10),
-        title=element_text(size=10))
+        axis.text=element_text(size=barplot_sizes$axis_text_size),
+        title=element_text(size=barplot_sizes$title_size))
 
 receipts_bar_plot
 ```
@@ -262,40 +286,50 @@ receipts_bar_plot
 ```{r}
 sal_bar_plot <- rev_inc_sal %>%
   filter(pci_peer) %>%
-  mutate(Municipality=fct_reorder(Municipality, Average.Salary)) %>%
-  mutate(FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
-  ggplot(aes(y = Municipality, x = Average.Salary, fill = FillCol)) +
+  mutate(Municipality=fct_reorder(Municipality, Average.Salary),
+         label=label_dollar(accuracy=1)(Average.Salary),
+         FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = Average.Salary, fill = FillCol, label=label)) +
   geom_col() +
-  theme_minimal() +
   labs(title = "Average Teacher Salary",
        y = "",
-       x = "Average Teacher Salary",
-       caption = "*Districts with per capita income \nsimilar to Marblehead") +
-  geom_text(aes(label = scales::dollar(Average.Salary)), hjust = -0.1, size = 3)+
-   guides(fill="none")+
-   coord_cartesian(xlim = c(0, 150000)) +
+       x = "Average Teacher Salary") +
+  geom_text(hjust = -0.1, size = barplot_sizes$axis_text_size/.pt)+
+  guides(fill="none")+
+  coord_cartesian(xlim = c(0, 260e3)) +
+  theme_minimal() +
   theme(axis.title=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
-        axis.text=element_text(size=10),
-        title=element_text(size=10))
+        axis.text=element_text(size=barplot_sizes$axis_text_size),
+        title=element_text(size=barplot_sizes$title_size))
 
 sal_bar_plot
+```
+
+
+
+# 3-up composite bar plot
+
+```{r, fig.width=6.4, fig.height=3.2}
+comp_3 <- plot_grid(pci_bar_plot, sal_bar_plot + theme(plot.caption=element_blank()), receipts_bar_plot, nrow = 1, align = "h")
+ggsave(here("figures", "fig_3_pci_salary_receipts.png"), comp_3, 
+       width = 6.4, height = 3.2, dpi=200, units = "in")
+ggsave(here("figures", "fig_3_pci_salary_receipts.jpeg"), comp_3, 
+       width = 6.4, height = 3.2, dpi=200, units = "in")
+ggsave(here("figures", "fig_3_pci_salary_receipts.pdf"), comp_3, 
+       width = 6.4, height = 3.2, dpi=200, units = "in")
+comp_3
 ```
 
 # Composite plot, per captia income and average teacher salary
 ```{r}
 comp <- plot_grid(pci_bar_plot, receipts_bar_plot, align = "h")
-ggsave(here("figures", "pci_receipts_comp.png"), comp, width = 6, height = 4, units = "in")
+ggsave(here("figures", "pci_receipts_comp.png"), comp, 
+       width = 3.2, height = 4, units = "in")
 comp
-```
-
-# 3-up composite bar plot
-
-```{r}
-comp_3 <- plot_grid(pci_bar_plot, sal_bar_plot + theme(plot.caption=element_blank()), receipts_bar_plot, nrow = 1, align = "h")
-ggsave(here("figures", "pci_receipts_sal_comp.png"), comp_3, width = 9, height = 4, units = "in")
-comp_3
 ```
 
 
