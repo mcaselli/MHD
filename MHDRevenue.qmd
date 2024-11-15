@@ -36,6 +36,10 @@ in income per capita of the `r n_municipalities` municipalities in the state, hi
 In terms of tax receipts per capita, Marblehead ranks
 `r max(rev_inc$pc_receipts_rank) - mhd_percentiles$pc_receipts_rank + 1` of Massachusetts municipalities.
 
+```{r}
+sizes <- list("axis_text_size" = 9, "axis_title_size" = 9, "title_size" = 9)
+```
+
 
 ```{r, fig.width=3.3, fig.height=3.3}
 receipts_income_plot <- rev_inc %>%
@@ -51,22 +55,22 @@ receipts_income_plot <- rev_inc %>%
            x=rev_inc %>% filter(Municipality=="Marblehead") %>% pull(DOR.Income.Per.Capita) + 50e3,
            y=rev_inc %>% filter(Municipality=="Marblehead") %>% pull(per_capita_receipts)-1.3e3,
            label="Marblehead", 
-           color="#F8766D") +
+           color="#F8766D", size=sizes$axis_text_size/.pt) +
   scale_x_continuous(labels = scales::label_dollar(scale=1/1e3, suffix="k")) +
   scale_y_continuous(labels = scales::label_dollar(scale=1/1e3, suffix="k")) +
   labs(x="Per Capita Income",
        y="Per Capita Tax Receipts") +
   theme_classic()  +
   theme(legend.position="none",
-        axis.text=element_text(size=12),
-        axis.title=element_text(size=12),
+        axis.text=element_text(size=sizes$axis_text_size),
+        axis.title=element_text(size=sizes$aixs_title_size),
         axis.line = element_line(color="gray")) #+
   #coord_cartesian(xlim=c(0, 250e3), ylim=c(0, 15e3))
 
 ggsave(here("figures", "receipts_income_plot.png"), receipts_income_plot, 
-       width=3.3, height=3.3, dpi=200, scaling=0.8, units="in")
+       width=3.3, height=3.3, dpi=200, units="in")
 ggsave(here("figures", "receipts_income_plot.jpeg"), receipts_income_plot, 
-       width=3.3, height=3.3, dpi=200, scaling=0.8, units="in")
+       width=3.3, height=3.3, dpi=200, units="in")
 ggsave(here("figures", "receipts_income_plot.pdf"), receipts_income_plot, 
        width=3.3, height=3.3, dpi=200, units="in")
 
@@ -225,7 +229,7 @@ plot_rev_income
 # barplots of income and tax receipts
 
 ```{r}
-sizes <- list("axis_text_size" = 8, "title_size" = 9)
+barplot_sizes <- list("axis_text_size" = 7, "axis_title_size" = 7, "title_size" = 7)
 ```
 
 
@@ -239,7 +243,7 @@ pci_bar_plot <- rev_inc_sal %>%
   geom_col() +
   labs(title = "Per Capita Income",
        x = "DOR Income Per Capita") +
-  geom_text(hjust = -0.1, size = sizes$axis_text_size/.pt)+
+  geom_text(hjust = -0.1, size = barplot_sizes$axis_text_size/.pt)+
   guides(fill="none")+
   coord_cartesian(xlim = c(0, 260e3)) +
   theme_minimal() +
@@ -248,8 +252,8 @@ pci_bar_plot <- rev_inc_sal %>%
         panel.grid.minor = element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
-        axis.text=element_text(size=sizes$axis_text_size),
-        title=element_text(size=sizes$title_size))
+        axis.text=element_text(size=barplot_sizes$axis_text_size),
+        title=element_text(size=barplot_sizes$title_size))
 pci_bar_plot
 ```
 # Average teacher salary of Marblehead and its income peers
@@ -264,7 +268,7 @@ receipts_bar_plot <- rev_inc_sal %>%
   geom_col() +
   labs(title = "Per Capita Tax Receipts",
        x = "Per Captia Tax Receipts") +
-  geom_text(hjust = -0.1, size = sizes$axis_text_size/.pt)+
+  geom_text(hjust = -0.1, size = barplot_sizes$axis_text_size/.pt)+
   guides(fill="none")+
   coord_cartesian(xlim = c(0, 10e3)) +
   theme_minimal() +
@@ -273,8 +277,8 @@ receipts_bar_plot <- rev_inc_sal %>%
         panel.grid.minor = element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
-        axis.text=element_text(size=sizes$axis_text_size),
-        title=element_text(size=sizes$title_size))
+        axis.text=element_text(size=barplot_sizes$axis_text_size),
+        title=element_text(size=barplot_sizes$title_size))
 
 receipts_bar_plot
 ```
@@ -290,7 +294,7 @@ sal_bar_plot <- rev_inc_sal %>%
   labs(title = "Average Teacher Salary",
        y = "",
        x = "Average Teacher Salary") +
-  geom_text(hjust = -0.1, size = sizes$axis_text_size/.pt)+
+  geom_text(hjust = -0.1, size = barplot_sizes$axis_text_size/.pt)+
   guides(fill="none")+
   coord_cartesian(xlim = c(0, 260e3)) +
   theme_minimal() +
@@ -299,8 +303,8 @@ sal_bar_plot <- rev_inc_sal %>%
         panel.grid.minor = element_blank(),
         axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
-        axis.text=element_text(size=sizes$axis_text_size),
-        title=element_text(size=sizes$title_size))
+        axis.text=element_text(size=barplot_sizes$axis_text_size),
+        title=element_text(size=barplot_sizes$title_size))
 
 sal_bar_plot
 ```
@@ -312,9 +316,9 @@ sal_bar_plot
 ```{r, fig.width=6.4, fig.height=3.2}
 comp_3 <- plot_grid(pci_bar_plot, sal_bar_plot + theme(plot.caption=element_blank()), receipts_bar_plot, nrow = 1, align = "h")
 ggsave(here("figures", "pci_receipts_sal_comp.png"), comp_3, 
-       width = 6.4, height = 3.2, dpi=200, scaling=0.8, units = "in")
+       width = 6.4, height = 3.2, dpi=200, units = "in")
 ggsave(here("figures", "pci_receipts_sal_comp.jpeg"), comp_3, 
-       width = 6.4, height = 3.2, dpi=200, scaling=0.8, units = "in")
+       width = 6.4, height = 3.2, dpi=200, units = "in")
 ggsave(here("figures", "pci_receipts_sal_comp.pdf"), comp_3, 
        width = 6.4, height = 3.2, dpi=200, units = "in")
 comp_3

@@ -68,6 +68,9 @@ plot2 <- ggplot(rev_inc_sal, aes(x = DOR.Income.Per.Capita, y = Average.Salary))
 ggsave(here("figures", "sal.png"), plot2, width = 9, height = 9, units = "in")
 plot2
 ```
+```{r}
+sizes <- list("axis_text_size" = 9, "axis_title_size" = 9, "title_size" = 9)
+```
 
 ```{r, warning=FALSE, fig.width=3.3, fig.height=2}
 plot_sal_pci <- rev_inc_sal %>%
@@ -81,29 +84,31 @@ plot_sal_pci <- rev_inc_sal %>%
   scale_alpha_manual(values=c("MHD"=1, "ns_peer"=1, "other"=0.2))+
   geom_smooth(method = "loess", se = FALSE, color = "#7CAE00") +
   geom_text_repel(data=rev_inc_sal %>% filter(!ns_peer),
-                  aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=Municipality), color = "#666666") +
+                  aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=Municipality),
+                  size=sizes$axis_text_size/.pt, color = "#666666") +
   geom_label_repel(data=rev_inc_sal %>% filter(ns_peer & !Municipality=="Marblehead"),
-                  aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=Municipality), color = "#00BFC4") +
+                  aes(x=DOR.Income.Per.Capita, y=Average.Salary, label=Municipality),
+                  size=sizes$axis_text_size/.pt, color = "#00BFC4") +
   annotate(geom="label",
            x=rev_inc_sal %>% filter(Municipality == "Marblehead") %>% pull(DOR.Income.Per.Capita) + 54e3,
            y=rev_inc_sal %>% filter(Municipality == "Marblehead") %>% pull(Average.Salary) - 3e3,
-           label="Marblehead", color = "#F8766D") +
+           label="Marblehead", size=sizes$axis_text_size/.pt, color = "#F8766D") +
   # geom_label_repel() +
   scale_color_manual(values = c(MHD="#F8766D", ns_peer="#00BFC4", other="black")) +
   scale_x_continuous(labels = scales::label_dollar(scale=1/1e3, suffix="k")) +
   scale_y_continuous(labels = scales::label_dollar(scale=1/1e3, suffix="k")) +
   theme_classic()  +
   theme(legend.position="none",
-        axis.text=element_text(size=12),
-        axis.title=element_text(size=12),
+        axis.text=element_text(size=sizes$axis_text_size),
+        axis.title=element_text(size=sizes$axis_title_size),
         axis.line = element_line(color="gray")) + 
   labs(x = "Per Capita Income",
        y = "Average Teacher Salary")
 
 ggsave(here("figures", "sal_vs_pci.jpeg"), plot_sal_pci, width = 3.3, height = 3.3,
-       units = "in", dpi=200, scaling=0.8)
+       units = "in", dpi=200)
 ggsave(here("figures", "sal_vs_pci.png"), plot_sal_pci, width = 3.3, height = 3.3,
-       units = "in", dpi=200, scaling=0.8)
+       units = "in", dpi=200)
 ggsave(here("figures", "sal_vs_pci.pdf"), plot_sal_pci, width = 3.3, height = 3.3,
        units = "in", dpi=200)
 
