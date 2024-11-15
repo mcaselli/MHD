@@ -11,6 +11,7 @@ library(here)
 library(tidyverse)
 library(readxl)
 library(scales)
+library(cowplot)
 ```
 ```{r, include=FALSE}
 source(here("read_and_process_data.R"))
