@@ -3082,29 +3082,35 @@ The following object is masked from &#39;package:readr&#39;:
     col_factor</code></pre>
 </div>
 </div>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>n_municipalities <span class="ot">&lt;-</span> <span class="fu">length</span>(<span class="fu">levels</span>(rev_inc<span class="sc">$</span>Municipality))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>The state data on taxes and incomes covers 351 municipalities.</p>
+<section id="teacher-salaries-vs-per-capita-income" class="level1">
+<h1>Teacher salaries vs per capita income</h1>
+<p>Considering Massachusetts municipalities with their own k-12 school districts (as opposed to those participating in regional school districts) only 8% of these municipalities have per capita income higher than Marblehead, while a full 52% of them have a higher average teacher salary.</p>
+</section>
 <section id="per-captia-income-and-teacher-average-salary" class="level1">
 <h1>Per Captia Income and Teacher Average Salary</h1>
-<p>Marblehead ranks 24 in income per capita of the 351 municipalities in the state, higher than 93.4% of them.</p>
 <p>Less than 7% of Massachusetts municipalities have per capita income higher than Marblehead, while a full 50% of school districts in the state have a higher average teacher salary.</p>
-</section>
-<section id="tax-receipts-per-capita" class="level1">
-<h1>Tax Receipts Per Capita</h1>
-<p>In terms of tax receipts per capita, Marblehead ranks 78 of Massachusetts municipalities.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>mhd_pc_receipts <span class="ot">&lt;-</span> rev_inc <span class="sc">%&gt;%</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Municipality<span class="sc">==</span><span class="st">&quot;Marblehead&quot;</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(per_capita_receipts)</span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>peer_median_pc_receipts <span class="ot">&lt;-</span> rev_inc <span class="sc">%&gt;%</span></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(pci_peer) <span class="sc">%&gt;%</span></span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">median_pc_receipts =</span> <span class="fu">median</span>(per_capita_receipts)) <span class="sc">%&gt;%</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(median_pc_receipts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>mhd_pc_receipts <span class="ot">&lt;-</span> rev_inc <span class="sc">%&gt;%</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(Municipality<span class="sc">==</span><span class="st">&quot;Marblehead&quot;</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(per_capita_receipts)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>peer_median_pc_receipts <span class="ot">&lt;-</span> rev_inc <span class="sc">%&gt;%</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(pci_peer) <span class="sc">%&gt;%</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">median_pc_receipts =</span> <span class="fu">median</span>(per_capita_receipts)) <span class="sc">%&gt;%</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pull</span>(median_pc_receipts)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>To provide further context, we looked at tax receipts among a peer group of municipalities with similar per capita income–the 5% of municipalities with per capita income directly above and below Marblehead’s.</p>
+</section>
+<section id="tax-receipts-vs-per-capita-income" class="level1">
+<h1>Tax receipts vs Per Capita Income</h1>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>n_municipalities <span class="ot">&lt;-</span> <span class="fu">length</span>(<span class="fu">levels</span>(rev_inc<span class="sc">$</span>Municipality))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>There’s been plenty of discussion in Marblehead lately about the town’s finances. Overrides have been voted down, as have zoning density increases that could bring growth to the property tax base.</p>
+<p>With the apparent reluctance on the part of voters to raise new revenue, and multiple town departments staring down the need for cuts in services to balance the budget, we wondered how Marblehead’s tax burden compared to its peers.</p>
+<p>The state data on taxes and income covers 351 municipalities.</p>
+<p>We looked at per capita tax receipts (Department of Revenue data for Total Receipts excluding Enterprise and CPA funds), and compared it to per capita income.</p>
+<p>Marblehead ranks 24 in per captia income among the 351 municipalities in the DOR data. In terms of tax receipts per capita, Marblehead ranks 78 of Massachusetts municipalities.</p>
+<p>To create a peer group for comparison, we selected the 10% of Mass municipalities closest to Marblehead in the per capita income rankings, giving us a list of 35 municipalities, with Marbhelehad right in the middle.</p>
 <p>Marblehead’s per capita tax receipts of $5,090.65 is 11% lower than the median of $5,746.32 of its closest per capita income peers.</p>
 </section>
 

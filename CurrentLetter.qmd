@@ -21,30 +21,23 @@ source(here("read_and_process_data.R"))
 ```
 
 
-```{r}
-n_municipalities <- length(levels(rev_inc$Municipality))
-```
 
-The state data on taxes and incomes covers `r n_municipalities` municipalities.
+# Teacher salaries vs per capita income 
+Considering Massachusetts municipalities with their own k-12 school districts 
+(as opposed to those participating in regional school districts)
+only `r label_percent(accuracy=1)(1-mhd_3_way_percentiles$pci_percentile)` 
+of these municipalities have per capita income higher than Marblehead, while a full 
+`r label_percent(accuracy=1)(1-mhd_3_way_percentiles$salary_percentile)` 
+of them have a higher average teacher salary.
+
 
 # Per Captia Income and Teacher Average Salary
-
-Marblehead ranks
-`r max(rev_inc$pci_rank) - mhd_percentiles$pci_rank + 1` 
-in income per capita of the `r n_municipalities` municipalities in the state, higher than `r label_percent(accuracy=0.1)(mhd_percentiles$pci_percentile)` of them.
 
 
 Less than `r label_percent(accuracy=1)(1-mhd_percentiles$pci_percentile)` 
 of Massachusetts municipalities have per capita income higher than Marblehead, while a full 
 `r label_percent(accuracy=1)(1-mhd_inc_sal_percentiles$salary_percentile)` 
 of school districts in the state have a higher average teacher salary.
-
-
-# Tax Receipts Per Capita
-
-In terms of tax receipts per capita, Marblehead ranks
-`r max(rev_inc$pc_receipts_rank) - mhd_percentiles$pc_receipts_rank + 1` 
-of Massachusetts municipalities.
 
 ```{r}
 mhd_pc_receipts <- rev_inc %>%
@@ -57,8 +50,28 @@ peer_median_pc_receipts <- rev_inc %>%
   pull(median_pc_receipts)
 ```
 
-To provide further context, we looked at tax receipts among a peer group of 
-municipalities with similar per capita income--the 5% of municipalities with per capita income directly above and below Marblehead's.
+# Tax receipts vs Per Capita Income
+```{r}
+n_municipalities <- length(levels(rev_inc$Municipality))
+```
+
+There's been plenty of discussion in Marblehead lately about the town's finances.
+Overrides have been voted down, as have zoning density increases that could
+bring growth to the property tax base.
+
+With the apparent reluctance on the part of voters to raise
+new revenue, and multiple town departments staring down the need for cuts in services to balance the budget, we wondered how Marblehead's tax burden compared to its peers.
+
+The state data on taxes and income covers `r n_municipalities` municipalities.
+
+We looked at per capita tax receipts (Department of Revenue data for Total Receipts excluding Enterprise and CPA funds),
+and compared it to per capita income.
+
+
+Marblehead ranks `r max(rev_inc$pci_rank) - mhd_percentiles$pci_rank + 1` in per captia income among the `r n_municipalities` municipalities in the DOR data. In terms of tax receipts per capita, Marblehead ranks
+`r max(rev_inc$pc_receipts_rank) - mhd_percentiles$pc_receipts_rank + 1` of Massachusetts municipalities.
+
+To create a peer group for comparison, we selected the 10% of Mass municipalities closest to Marblehead in the per capita income rankings, giving us a list of `r nrow(rev_inc %>% filter(pci_peer))` municipalities, with Marbhelehad right in the middle.
 
 Marblehead's per capita tax receipts of  `r label_dollar()(mhd_pc_receipts)` is
 `r label_percent()((peer_median_pc_receipts - mhd_pc_receipts)/peer_median_pc_receipts)` 

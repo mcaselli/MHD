@@ -48,6 +48,20 @@ rev_inc %>%
          y="Per Capita Tax Receipts")
 ```
 
+# only municipalities with their own k-12 school districts
+```{r}
+rev_inc_sal %>%
+  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=Municipality)) +
+  geom_point() +
+  gghighlight::gghighlight(Municipality == "Marblehead") +
+  scale_x_continuous(labels=label_dollar()) +
+  scale_y_continuous(labels=label_dollar()) +
+  labs(title="Mass municipalities with their own k-12 school districts",
+         x="Income per Capita",
+         y="Per Capita Tax Receipts")
+```
+
+
 ```{r}
 mhd_pc_receipts <- rev_inc %>%
   filter(Municipality=="Marblehead") %>%
@@ -82,22 +96,24 @@ rev_inc %>%
   ),
   label=case_when(!ns_peer ~ NA,
                   TRUE ~ Municipality)) %>%
-  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=label,
+  ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=Municipality,
              color=class)) +
   geom_point() +
-  ggrepel::geom_text_repel() +
+  ggrepel::geom_text_repel(show.legend = FALSE) +
   geom_hline(yintercept=peer_median_pc_receipts, linetype="dashed",
-             color="darkgray") +
+             color="#333333") +
   annotate(geom="text", x=140e3, y=peer_median_pc_receipts+150, label="Median of Peers",
-           color="darkgray"
+           color="#333333"
            ) +
+  scale_color_manual(values=c("Marblehead"="#F8766D", "North Shore"="#00BFC4", "Other Mass Municipalities"="gray"))+
   scale_x_continuous(labels=label_dollar()) +
   scale_y_continuous(labels=label_dollar()) +
-  labs(title="Marblehead's Per Capita Income Peers",
-       subtitle = "the 34 Mass municipalities (17 above, 17 below) closest to Marblehead in income per capita",
+  labs(title="Tax Receipts among Marblehead's Per Capita Income Peers",
          x="Income per Capita",
          y="Per Capita Tax Receipts") +
-  theme_minimal()
+  theme_minimal() +
+  theme(legend.title = element_blank(),
+        legend.position = "bottom")
 ```
 
 
