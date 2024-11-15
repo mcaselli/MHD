@@ -80,7 +80,7 @@ rev_inc %>%
   filter(pci_peer) %>%
   mutate(class = case_when(
     Municipality=="Marblehead" ~ "Marblehead",
-    ns_peer ~ "North Shore",
+    ns_peer ~ "Essex County",
     TRUE ~ "Other Mass Municipalities"
   ),
   label=case_when(!ns_peer ~ NA,
@@ -94,7 +94,7 @@ rev_inc %>%
   annotate(geom="text", x=140e3, y=peer_median_pc_receipts+150, label="Median of Peers",
            color="#333333"
            ) +
-  scale_color_manual(values=c("Marblehead"="#F8766D", "North Shore"="#00BFC4", "Other Mass Municipalities"="gray"))+
+  scale_color_manual(values=c("Marblehead"="#F8766D", "Essex County"="#00BFC4", "Other Mass Municipalities"="gray"))+
   scale_x_continuous(labels=label_dollar()) +
   scale_y_continuous(labels=label_dollar()) +
   labs(title="Tax Receipts among Marblehead's Per Capita Income Peers",
@@ -136,6 +136,7 @@ rev_inc %>%
 rev_inc_sal %>%
   ggplot(aes(x=DOR.Income.Per.Capita, y=per_capita_receipts, label=Municipality)) +
   geom_point() +
+  geom_smooth(method="loess", se=FALSE) +
   gghighlight::gghighlight(Municipality == "Marblehead") +
   scale_x_continuous(labels=label_dollar()) +
   scale_y_continuous(labels=label_dollar()) +
@@ -164,12 +165,12 @@ lower than the median of `r label_dollar()(k_12_peer_median_pc_receipts)` of its
 closest per capita income peers.
 
 
-```{r}
-rev_inc_sal %>%
+```{r, fig.height=5, fig.width=5}
+plot_rev_income <- rev_inc_sal %>%
   filter(pci_peer) %>%
   mutate(class = case_when(
     Municipality=="Marblehead" ~ "Marblehead",
-    ns_peer ~ "North Shore",
+    ns_peer ~ "Essex County",
     TRUE ~ "Other Mass Municipalities"
   ),
   label=case_when(!ns_peer ~ NA,
@@ -180,18 +181,21 @@ rev_inc_sal %>%
   ggrepel::geom_text_repel(show.legend = FALSE) +
   geom_hline(yintercept=k_12_peer_median_pc_receipts, linetype="dashed",
              color="#333333") +
-  annotate(geom="text", x=125e3, y=k_12_peer_median_pc_receipts+150, label="Median of Peers",
+  annotate(geom="text", x=120e3, y=k_12_peer_median_pc_receipts-100, label="Median of Peers",
            color="#333333"
            ) +
-  scale_color_manual(values=c("Marblehead"="#F8766D", "North Shore"="#00BFC4", "Other Mass Municipalities"="gray"))+
+  scale_color_manual(values=c("Marblehead"="#F8766D", "Essex County"="#00BFC4", "Other Mass Municipalities"="gray"))+
   scale_x_continuous(labels=label_dollar()) +
   scale_y_continuous(labels=label_dollar()) +
-  labs(title="Tax Receipts among Marblehead's Per Capita Income Peers",
+  labs(title="Tax Receipts",
+       subtitle="among Marblehead's Per Capita Income Peers",
          x="Income per Capita",
          y="Per Capita Tax Receipts") +
   theme_minimal() +
   theme(legend.title = element_blank(),
         legend.position = "bottom")
+ggsave(here("figures", "rev_vs_income.png"), plot_rev_income, width = 5, height = 5, units = "in")
+plot_rev_income
 ```
 
 
