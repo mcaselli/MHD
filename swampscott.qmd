@@ -1,0 +1,120 @@
+---
+title: "Where's Swampscott"
+format: 
+  html:
+    embed-resources: true
+---
+
+
+```{r}
+here::i_am("swampscott.qmd")
+library(here)
+library(tidyverse)
+library(DT)
+library(scales)
+library(cowplot)
+```
+
+```{r}
+source(here("read_and_process_data.R"))
+```
+
+```{r}
+enrollment %>% 
+  filter(District_NAME == "Swampscott")
+```
+
+
+```{r}
+barplot_sizes <- list("axis_text_size" = 7, "axis_title_size" = 7, "title_size" = 7)
+```
+
+
+```{r}
+pci_bar_plot <- rev_inc_sal %>%
+  filter(pci_peer | Municipality == "Swampscott") %>%
+  mutate(Municipality=fct_reorder(Municipality, DOR.Income.Per.Capita),
+         label=label_dollar(accuracy=1)(DOR.Income.Per.Capita),
+         FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = DOR.Income.Per.Capita, fill = FillCol, label=label)) +
+  geom_col() +
+  labs(title = "Per Capita Income",
+       x = "DOR Income Per Capita") +
+  geom_text(hjust = -0.1, size = barplot_sizes$axis_text_size/.pt)+
+  guides(fill="none")+
+  coord_cartesian(xlim = c(0, 260e3)) +
+  theme_minimal() +
+  theme(axis.title=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.background = element_rect(fill = "white", linetype = "blank"),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text=element_text(size=barplot_sizes$axis_text_size),
+        title=element_text(size=barplot_sizes$title_size))
+pci_bar_plot
+```
+# Average teacher salary of Marblehead and its income peers
+
+```{r}
+receipts_bar_plot <- rev_inc_sal %>%
+  filter(pci_peer | Municipality == "Swampscott") %>%
+  mutate(Municipality=fct_reorder(Municipality, per_capita_receipts),
+         label=label_dollar(accuracy=1)(per_capita_receipts),
+         FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = per_capita_receipts, fill = FillCol, label=label)) +
+  geom_col() +
+  labs(title = "Per Capita Tax Receipts",
+       x = "Per Captia Tax Receipts") +
+  geom_text(hjust = -0.1, size = barplot_sizes$axis_text_size/.pt)+
+  guides(fill="none")+
+  coord_cartesian(xlim = c(0, 10e3)) +
+  theme_minimal() +
+  theme(axis.title=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.background = element_rect(fill = "white", linetype = "blank"),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text=element_text(size=barplot_sizes$axis_text_size),
+        title=element_text(size=barplot_sizes$title_size))
+
+receipts_bar_plot
+```
+# salary bar plot
+```{r}
+sal_bar_plot <- rev_inc_sal %>%
+  filter(pci_peer | Municipality == "Swampscott") %>%
+  mutate(Municipality=fct_reorder(Municipality, Average.Salary),
+         label=label_dollar(accuracy=1)(Average.Salary),
+         FillCol = ifelse(Municipality == "Marblehead", "#00BFC4", "#F8766D")) %>%
+  ggplot(aes(y = Municipality, x = Average.Salary, fill = FillCol, label=label)) +
+  geom_col() +
+  labs(title = "Average Teacher Salary",
+       y = "",
+       x = "Average Teacher Salary") +
+  geom_text(hjust = -0.1, size = barplot_sizes$axis_text_size/.pt)+
+  guides(fill="none")+
+  coord_cartesian(xlim = c(0, 260e3)) +
+  theme_minimal() +
+  theme(axis.title=element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        plot.background = element_rect(fill = "white", linetype = "blank"),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.text=element_text(size=barplot_sizes$axis_text_size),
+        title=element_text(size=barplot_sizes$title_size))
+
+sal_bar_plot
+```
+
+
+
+# 3-up composite bar plot
+
+```{r, fig.width=6.4, fig.height=3.2}
+comp_3 <- plot_grid(pci_bar_plot, sal_bar_plot, receipts_bar_plot, nrow = 1, align = "h")
+comp_3
+```
+
