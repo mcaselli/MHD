@@ -24,10 +24,31 @@ enrollment %>%
   filter(District_NAME == "Swampscott")
 ```
 
+```{r}
+rev_inc_sal%>%
+  filter(Municipality %in% c("Swampscott", "Marblehead") | pci_peer) %>%
+  select(Municipality, DOR.Income.Per.Capita, Average.Salary, per_capita_receipts,
+         contains("rank"), contains("percentile")) %>%
+  arrange(pci_rank)
+```
+
+```{r}
+rev_inc_sal %>%
+  filter(pci_peer) %>%
+  select(Municipality, DOR.Income.Per.Capita, Average.Salary, per_capita_receipts,
+         contains("rank"), contains("percentile")) %>%
+slice_max(order_by=pci_rank)
+
+```
+
+
 
 ```{r}
 barplot_sizes <- list("axis_text_size" = 7, "axis_title_size" = 7, "title_size" = 7)
 ```
+
+
+
 
 
 ```{r}
